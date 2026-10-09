@@ -1,0 +1,6 @@
+{
+  "name": "Teste de QI Japonês - Travessia do Rio",
+  "description": "O clássico quebra-cabeça lógico japonês da travessia do rio. Teste seu raciocínio lógico transportando a família, o policial e o prisioneiro com segurança.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

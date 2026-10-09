@@ -1,0 +1,355 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { CharacterId, CharacterState, Bank, RuleViolation, GameSnapshot } from './types/game';
+import { INITIAL_CHARACTERS_STATE, CHARACTERS } from './utils/characters';
+import { evaluateAllRules, validateRaftCanSail, checkVictory } from './utils/rules';
+import { findNextOptimalStep, SolverStep } from './utils/solver';
+import { soundManager } from './utils/audio';
+
+import { GameHeader } from './components/GameHeader';
+import { StartScreen } from './components/StartScreen';
+import { RiverBoard } from './components/RiverBoard';
+import { ViolationBanner } from './components/ViolationBanner';
+import { RulesModal } from './components/RulesModal';
+import { HintModal } from './components/HintModal';
+import { VictoryModal } from './components/VictoryModal';
+
+export default function App() {
+  const [started, setStarted] = useState(false);
+  const [raftBank, setRaftBank] = useState<Bank>('left');
+  const [characters, setCharacters] = useState<Record<CharacterId, CharacterState>>(
+    INITIAL_CHARACTERS_STATE
+  );
+  const [isSailing, setIsSailing] = useState(false);
+  const [movesCount, setMovesCount] = useState(0);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+  const [currentViolation, setCurrentViolation] = useState<RuleViolation | null>(null);
+  const [history, setHistory] = useState<GameSnapshot[]>([]);
+
+  const [isWon, setIsWon] = useState(false);
+  const [showRulesModal, setShowRulesModal] = useState(false);
+  const [showHintModal, setShowHintModal] = useState(false);
+  const [hintStep, setHintStep] = useState<SolverStep | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Timer interval
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (started && isTimerRunning && !isWon) {
+      interval = setInterval(() => {
+        setTimerSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [started, isTimerRunning, isWon]);
+
+  // Synchronize sound manager
+  const handleToggleSound = useCallback(() => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    soundManager.enabled = next;
+  }, [soundEnabled]);
+
+  // Start Game
+  const handleStartGame = () => {
+    soundManager.playStart();
+    setStarted(true);
+    setIsTimerRunning(true);
+  };
+
+  // Restart Game
+  const handleRestart = () => {
+    soundManager.playClick();
+    setRaftBank('left');
+    setCharacters(INITIAL_CHARACTERS_STATE);
+    setIsSailing(false);
+    setMovesCount(0);
+    setTimerSeconds(0);
+    setIsTimerRunning(true);
+    setCurrentViolation(null);
+    setHistory([]);
+    setIsWon(false);
+  };
+
+  // Push Snapshot
+  const pushHistory = (desc: string) => {
+    const snapshot: GameSnapshot = {
+      raftBank,
+      characters: JSON.parse(JSON.stringify(characters)),
+      movesCount,
+      description: desc,
+    };
+    setHistory((prev) => [...prev, snapshot]);
+  };
+
+  // Undo Move
+  const handleUndo = () => {
+    if (history.length === 0 || isSailing) return;
+    soundManager.playClick();
+    const last = history[history.length - 1];
+    setRaftBank(last.raftBank);
+    setCharacters(last.characters);
+    setMovesCount(last.movesCount);
+    setCurrentViolation(null);
+    setHistory((prev) => prev.slice(0, prev.length - 1));
+  };
+
+  // Character Click
+  const handleCharacterClick = (id: CharacterId) => {
+    if (isSailing) return;
+
+    const charState = characters[id];
+
+    if (charState.onRaft) {
+      // Disembark from raft to current raft bank
+      pushHistory(`Desembarque de ${CHARACTERS[id].name}`);
+      soundManager.playStepOff();
+
+      const newCharacters = {
+        ...characters,
+        [id]: {
+          ...charState,
+          onRaft: false,
+          bank: raftBank,
+        },
+      };
+
+      setCharacters(newCharacters);
+
+      // Validate new state
+      const violations = evaluateAllRules(newCharacters);
+      if (violations.length > 0) {
+        soundManager.playViolation();
+        setCurrentViolation(violations[0]);
+      } else {
+        setCurrentViolation(null);
+      }
+    } else {
+      // Embark onto raft
+      // Must be on same bank as raft
+      if (charState.bank !== raftBank) {
+        return;
+      }
+
+      // Check raft passenger capacity (max 2)
+      const currentRaftCount = Object.values(characters).filter((c) => c.onRaft).length;
+      if (currentRaftCount >= 2) {
+        soundManager.playViolation();
+        setCurrentViolation({
+          ruleNumber: 1,
+          title: 'Jangada Lotada',
+          message: 'No máximo duas pessoas podem estar na jangada ao mesmo tempo!',
+          location: 'Jangada',
+          violatorIds: [id],
+          targetIds: [],
+        });
+        return;
+      }
+
+      pushHistory(`Embarque de ${CHARACTERS[id].name}`);
+      soundManager.playBoard();
+
+      const newCharacters = {
+        ...characters,
+        [id]: {
+          ...charState,
+          onRaft: true,
+        },
+      };
+
+      setCharacters(newCharacters);
+
+      // Validate rules
+      const violations = evaluateAllRules(newCharacters);
+      if (violations.length > 0) {
+        soundManager.playViolation();
+        setCurrentViolation(violations[0]);
+      } else {
+        setCurrentViolation(null);
+      }
+    }
+  };
+
+  // Sail Raft across River
+  const handleSail = () => {
+    if (isSailing) return;
+
+    const raftCheck = validateRaftCanSail(characters);
+    if (!raftCheck.canSail) {
+      soundManager.playViolation();
+      setCurrentViolation({
+        ruleNumber: 5,
+        title: 'Impossível Navegar',
+        message: raftCheck.reason || 'Só o policial e os pais podem conduzir a jangada!',
+        location: 'Jangada',
+        violatorIds: [],
+        targetIds: [],
+      });
+      return;
+    }
+
+    // Check if there are active violations right now
+    const currentRules = evaluateAllRules(characters);
+    if (currentRules.length > 0) {
+      soundManager.playViolation();
+      setCurrentViolation(currentRules[0]);
+      return;
+    }
+
+    pushHistory('Travessia do Rio');
+    soundManager.playSail();
+    setIsSailing(true);
+
+    const nextBank: Bank = raftBank === 'left' ? 'right' : 'left';
+
+    // Update characters on raft to the new bank
+    const newCharacters = { ...characters };
+    (Object.keys(newCharacters) as CharacterId[]).forEach((id) => {
+      if (newCharacters[id].onRaft) {
+        newCharacters[id] = {
+          ...newCharacters[id],
+          bank: nextBank,
+        };
+      }
+    });
+
+    setCharacters(newCharacters);
+    setRaftBank(nextBank);
+    setMovesCount((prev) => prev + 1);
+
+    // After raft crossing animation settles (1000ms)
+    setTimeout(() => {
+      setIsSailing(false);
+
+      // Check rules at the new bank
+      const postCrossingViolations = evaluateAllRules(newCharacters);
+      if (postCrossingViolations.length > 0) {
+        soundManager.playViolation();
+        setCurrentViolation(postCrossingViolations[0]);
+      } else {
+        // Check victory
+        if (checkVictory(newCharacters)) {
+          soundManager.playVictory();
+          setIsWon(true);
+          setIsTimerRunning(false);
+        }
+      }
+    }, 1000);
+  };
+
+  // Open Hint
+  const handleOpenHint = () => {
+    soundManager.playClick();
+    const leftList = (Object.keys(characters) as CharacterId[]).filter(
+      (id) => characters[id].bank === 'left'
+    );
+    const rightList = (Object.keys(characters) as CharacterId[]).filter(
+      (id) => characters[id].bank === 'right'
+    );
+
+    const step = findNextOptimalStep(raftBank, leftList, rightList);
+    setHintStep(step);
+    setShowHintModal(true);
+  };
+
+  // Apply Hint to Raft
+  const handleApplyHint = (passengers: CharacterId[]) => {
+    soundManager.playClick();
+    // Move all current passengers off raft
+    const updated = { ...characters };
+    (Object.keys(updated) as CharacterId[]).forEach((id) => {
+      if (updated[id].onRaft) {
+        updated[id] = {
+          ...updated[id],
+          onRaft: false,
+          bank: raftBank,
+        };
+      }
+    });
+
+    // Board suggested passengers
+    passengers.forEach((id) => {
+      updated[id] = {
+        ...updated[id],
+        onRaft: true,
+        bank: raftBank,
+      };
+    });
+
+    setCharacters(updated);
+    setCurrentViolation(null);
+  };
+
+  const currentViolations = evaluateAllRules(characters);
+  const raftCanSail = validateRaftCanSail(characters).canSail && currentViolations.length === 0;
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none antialiased">
+      {/* Top Header */}
+      <GameHeader
+        timerSeconds={timerSeconds}
+        movesCount={movesCount}
+        canUndo={history.length > 0 && !isSailing}
+        soundEnabled={soundEnabled}
+        onUndo={handleUndo}
+        onRestart={handleRestart}
+        onToggleSound={handleToggleSound}
+        onOpenRules={() => {
+          soundManager.playClick();
+          setShowRulesModal(true);
+        }}
+        onOpenHint={handleOpenHint}
+      />
+
+      {/* Main Container */}
+      <main className="flex-1 flex flex-col relative overflow-hidden">
+        {!started ? (
+          <StartScreen onStart={handleStartGame} />
+        ) : (
+          <RiverBoard
+            characters={characters}
+            raftBank={raftBank}
+            isSailing={isSailing}
+            onCharacterClick={handleCharacterClick}
+            onSail={handleSail}
+            canSail={raftCanSail}
+            currentViolations={currentViolations}
+            hintPassengers={hintStep ? hintStep.passengers : []}
+          />
+        )}
+      </main>
+
+      {/* Comic Violation Banner Alert */}
+      <ViolationBanner
+        violation={currentViolation}
+        onDismiss={() => setCurrentViolation(null)}
+        onUndo={handleUndo}
+      />
+
+      {/* Detailed Rules & Logic Modal */}
+      <RulesModal
+        isOpen={showRulesModal}
+        onClose={() => setShowRulesModal(false)}
+      />
+
+      {/* Logic Hint Modal */}
+      <HintModal
+        isOpen={showHintModal}
+        onClose={() => setShowHintModal(false)}
+        hintStep={hintStep}
+        onApplyHint={handleApplyHint}
+      />
+
+      {/* Victory Celebration Modal */}
+      <VictoryModal
+        isOpen={isWon}
+        movesCount={movesCount}
+        timerSeconds={timerSeconds}
+        onRestart={handleRestart}
+      />
+    </div>
+  );
+}
