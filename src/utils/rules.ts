@@ -125,6 +125,6 @@ export function validateRaftCanSail(
 
 export function checkVictory(characters: Record<CharacterId, CharacterState>): boolean {
   return (Object.keys(characters) as CharacterId[]).every(
-    (id) => characters[id].bank === 'right' && !characters[id].onRaft
+    (id) => characters[id].bank === 'right'
   );
 }

@@ -6,6 +6,7 @@ interface GameHeaderProps {
   movesCount: number;
   canUndo: boolean;
   soundEnabled: boolean;
+  isWon?: boolean;
   onUndo: () => void;
   onRestart: () => void;
   onToggleSound: () => void;
@@ -18,6 +19,7 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
   movesCount,
   canUndo,
   soundEnabled,
+  isWon = false,
   onUndo,
   onRestart,
   onToggleSound,
@@ -52,9 +54,18 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
         <div className="flex items-center gap-4 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
           <div className="flex items-center gap-1.5 text-xs text-slate-300">
             <span className="text-slate-400">Tempo:</span>
-            <span className="font-mono tabular-nums font-semibold text-white">
+            <span
+              className={`font-mono tabular-nums font-semibold ${
+                isWon ? 'text-emerald-400 font-bold' : 'text-white'
+              }`}
+            >
               {formatTime(timerSeconds)}
             </span>
+            {isWon && (
+              <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600/50 px-1.5 py-0.2 rounded font-bold uppercase tracking-wider">
+                Parado
+              </span>
+            )}
           </div>
 
           <span className="text-slate-600" aria-hidden="true">

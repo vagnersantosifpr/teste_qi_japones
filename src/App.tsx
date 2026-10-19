@@ -121,6 +121,12 @@ export default function App() {
       };
 
       setCharacters(newCharacters);
+
+      if (checkVictory(newCharacters)) {
+        setIsTimerRunning(false);
+        setIsWon(true);
+        soundManager.playVictory();
+      }
     } else {
       // Embark onto raft
       if (charState.bank !== raftBank) {
@@ -238,11 +244,17 @@ export default function App() {
     setTimeout(() => {
       setIsSailing(false);
 
-      // Check victory
+      // Check victory: all 8 people successfully reached the right bank!
       if (checkVictory(simulatedArrivalCharacters)) {
-        soundManager.playVictory();
-        setIsWon(true);
+        // Disembark everyone to the right bank shore to celebrate
+        const finalCharacters = { ...simulatedArrivalCharacters };
+        (Object.keys(finalCharacters) as CharacterId[]).forEach((id) => {
+          finalCharacters[id] = { ...finalCharacters[id], onRaft: false, bank: 'right' };
+        });
+        setCharacters(finalCharacters);
         setIsTimerRunning(false);
+        setIsWon(true);
+        soundManager.playVictory();
       }
     }, 1000);
   };
@@ -301,6 +313,7 @@ export default function App() {
         movesCount={movesCount}
         canUndo={history.length > 0 && !isSailing}
         soundEnabled={soundEnabled}
+        isWon={isWon}
         onUndo={handleUndo}
         onRestart={handleRestart}
         onToggleSound={handleToggleSound}
