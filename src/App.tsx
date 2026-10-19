@@ -33,6 +33,22 @@ export default function App() {
   const [hintStep, setHintStep] = useState<SolverStep | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  // Student identification state
+  const [studentName, setStudentName] = useState(() => {
+    try {
+      return localStorage.getItem('japanese_river_student_name') || '';
+    } catch (_) {
+      return '';
+    }
+  });
+
+  const handleStudentNameChange = (name: string) => {
+    setStudentName(name);
+    try {
+      localStorage.setItem('japanese_river_student_name', name);
+    } catch (_) {}
+  };
+
   // Timer interval
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -314,6 +330,7 @@ export default function App() {
         canUndo={history.length > 0 && !isSailing}
         soundEnabled={soundEnabled}
         isWon={isWon}
+        studentName={studentName}
         onUndo={handleUndo}
         onRestart={handleRestart}
         onToggleSound={handleToggleSound}
@@ -327,7 +344,11 @@ export default function App() {
       {/* Main Container */}
       <main className="flex-1 flex flex-col relative overflow-hidden">
         {!started ? (
-          <StartScreen onStart={handleStartGame} />
+          <StartScreen
+            studentName={studentName}
+            onStudentNameChange={handleStudentNameChange}
+            onStart={handleStartGame}
+          />
         ) : (
           <RiverBoard
             characters={characters}
@@ -368,6 +389,8 @@ export default function App() {
         isOpen={isWon}
         movesCount={movesCount}
         timerSeconds={timerSeconds}
+        studentName={studentName}
+        onStudentNameChange={handleStudentNameChange}
         onRestart={handleRestart}
       />
     </div>

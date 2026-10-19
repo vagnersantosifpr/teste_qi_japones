@@ -1,9 +1,11 @@
 import React from 'react';
-import { Play, Sparkles, Clock, Compass, ShieldAlert, Award } from 'lucide-react';
+import { Play, Sparkles, Clock, Compass, ShieldAlert, Award, User } from 'lucide-react';
 import { CharacterFigure } from './CharacterFigure';
 import { CharacterId } from '../types/game';
 
 interface StartScreenProps {
+  studentName: string;
+  onStudentNameChange: (name: string) => void;
   onStart: () => void;
 }
 
@@ -18,7 +20,11 @@ const LINEUP: CharacterId[] = [
   'prisoner',
 ];
 
-export const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
+export const StartScreen: React.FC<StartScreenProps> = ({
+  studentName,
+  onStudentNameChange,
+  onStart,
+}) => {
   return (
     <div className="relative min-h-[calc(100vh-65px)] w-full flex items-center justify-center p-4 lg:p-8 bg-slate-950/80 backdrop-blur-sm z-40">
       <div className="max-w-4xl w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 lg:p-10 text-white flex flex-col items-center text-center">
@@ -32,12 +38,40 @@ export const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
           Teste de QI Japonês · Travessia do Rio
         </h2>
 
-        <p className="text-sm sm:text-base text-slate-300 max-w-2xl mb-6">
+        <p className="text-sm sm:text-base text-slate-300 max-w-2xl mb-5">
           O objetivo é passar <strong>todas as 8 pessoas</strong> para a outra margem do rio usando a jangada, respeitando rigorosamente as regras de segurança familiar e condução.
         </p>
 
+        {/* Student Name Input Field */}
+        <div className="w-full max-w-md mx-auto mb-5 bg-slate-800/80 p-3.5 sm:p-4 rounded-xl border border-slate-700/80 shadow-md flex flex-col items-center text-left">
+          <label
+            htmlFor="student-name-input"
+            className="w-full text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"
+          >
+            <User className="w-4 h-4 text-blue-400" />
+            Nome do(a) Aluno(a) / Participante:
+          </label>
+          <input
+            id="student-name-input"
+            type="text"
+            value={studentName}
+            onChange={(e) => onStudentNameChange(e.target.value)}
+            placeholder="Digite o seu nome completo..."
+            className="w-full px-3.5 py-2 bg-slate-900/90 border border-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 rounded-lg text-sm text-white placeholder-slate-400 outline-none transition-all text-center font-medium"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                onStart();
+              }
+            }}
+          />
+          <span className="text-[11px] text-slate-400 mt-1.5 text-center w-full">
+            Seu nome será exibido no <strong>painel final de pontuação</strong> e relatório.
+          </span>
+        </div>
+
         {/* Big Circular Blue Button - As requested in the brief! */}
-        <div className="relative my-4 flex flex-col items-center">
+        <div className="relative my-2 flex flex-col items-center">
           <button
             onClick={onStart}
             className="group relative w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-blue-700 via-blue-600 to-cyan-400 text-white font-extrabold text-lg sm:text-xl shadow-[0_0_35px_rgba(37,99,235,0.7)] hover:shadow-[0_0_55px_rgba(59,130,246,0.95)] hover:scale-105 active:scale-95 transition-all duration-300 flex flex-col items-center justify-center gap-1 cursor-pointer ring-4 ring-blue-400/50"

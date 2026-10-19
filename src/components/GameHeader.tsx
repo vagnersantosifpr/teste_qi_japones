@@ -1,5 +1,5 @@
 import React from 'react';
-import { Volume2, VolumeX, RotateCcw, HelpCircle, Lightbulb, Undo2 } from 'lucide-react';
+import { Volume2, VolumeX, RotateCcw, HelpCircle, Lightbulb, Undo2, User } from 'lucide-react';
 
 interface GameHeaderProps {
   timerSeconds: number;
@@ -7,6 +7,7 @@ interface GameHeaderProps {
   canUndo: boolean;
   soundEnabled: boolean;
   isWon?: boolean;
+  studentName?: string;
   onUndo: () => void;
   onRestart: () => void;
   onToggleSound: () => void;
@@ -20,6 +21,7 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
   canUndo,
   soundEnabled,
   isWon = false,
+  studentName = '',
   onUndo,
   onRestart,
   onToggleSound,
@@ -45,7 +47,11 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
               Teste de QI Japonês
             </h1>
             <p className="text-[11px] text-slate-400 hidden sm:block">
-              Enigma da Travessia do Rio (日本川渡りパズル)
+              {studentName.trim() ? (
+                <span>Aluno(a): <strong className="text-blue-300">{studentName.trim()}</strong></span>
+              ) : (
+                'Enigma da Travessia do Rio (日本川渡りパズル)'
+              )}
             </p>
           </div>
         </div>
