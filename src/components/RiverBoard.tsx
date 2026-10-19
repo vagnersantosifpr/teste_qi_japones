@@ -12,7 +12,7 @@ interface RiverBoardProps {
   onCharacterClick: (id: CharacterId) => void;
   onSail: () => void;
   canSail: boolean;
-  currentViolations: RuleViolation[];
+  currentViolation: RuleViolation | null;
   hintPassengers?: CharacterId[];
 }
 
@@ -34,7 +34,7 @@ export const RiverBoard: React.FC<RiverBoardProps> = ({
   onCharacterClick,
   onSail,
   canSail,
-  currentViolations,
+  currentViolation,
   hintPassengers = [],
 }) => {
   const leftShoreChars = ALL_CHAR_IDS.filter(
@@ -45,8 +45,8 @@ export const RiverBoard: React.FC<RiverBoardProps> = ({
   );
   const raftChars = ALL_CHAR_IDS.filter((id) => characters[id].onRaft);
 
-  const violatorIds = currentViolations.flatMap((v) => v.violatorIds);
-  const targetIds = currentViolations.flatMap((v) => v.targetIds);
+  const violatorIds = currentViolation ? currentViolation.violatorIds : [];
+  const targetIds = currentViolation ? currentViolation.targetIds : [];
 
   return (
     <div className="relative w-full flex-1 flex flex-col justify-between overflow-hidden select-none min-h-[580px] lg:min-h-[660px]">
@@ -202,16 +202,16 @@ export const RiverBoard: React.FC<RiverBoardProps> = ({
         <div className="w-full bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-xl p-3 shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>Monitores de Regras Lógicas em Tempo Real:</span>
+              <span>Regras Lógicas do Teste:</span>
             </span>
             <span className="text-[11px] text-slate-400">
-              {currentViolations.length === 0 ? (
-                <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                  <Check className="w-3.5 h-3.5" /> Estado 100% Válido
+              {currentViolation ? (
+                <span className="text-red-400 font-bold flex items-center gap-1 animate-pulse">
+                  <AlertCircle className="w-3.5 h-3.5" /> Atenção: Regra {currentViolation.ruleNumber} Infringida!
                 </span>
               ) : (
-                <span className="text-red-400 font-bold flex items-center gap-1 animate-pulse">
-                  <AlertCircle className="w-3.5 h-3.5" /> {currentViolations.length} Regra(s) Violada(s)!
+                <span className="text-slate-400 font-medium flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5 text-emerald-400" /> Embarque até 2 pessoas e use o ponto vermelho para atravessar
                 </span>
               )}
             </span>
@@ -221,17 +221,17 @@ export const RiverBoard: React.FC<RiverBoardProps> = ({
             {/* Rule 1 */}
             <div
               className={`p-1.5 rounded-lg border flex items-center gap-1.5 ${
-                raftChars.length <= 2
-                  ? 'bg-slate-800/80 border-slate-700 text-slate-300'
-                  : 'bg-red-950/80 border-red-600 text-red-200'
+                currentViolation?.ruleNumber === 1
+                  ? 'bg-red-950/80 border-red-600 text-red-200'
+                  : 'bg-slate-800/80 border-slate-700 text-slate-300'
               }`}
             >
               <div
                 className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${
-                  raftChars.length <= 2 ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+                  currentViolation?.ruleNumber === 1 ? 'bg-red-600 text-white font-bold' : 'bg-emerald-600 text-white'
                 }`}
               >
-                ✓
+                {currentViolation?.ruleNumber === 1 ? '!' : '✓'}
               </div>
               <span className="truncate">1. Máx 2 na jangada</span>
             </div>
@@ -239,19 +239,17 @@ export const RiverBoard: React.FC<RiverBoardProps> = ({
             {/* Rule 2 */}
             <div
               className={`p-1.5 rounded-lg border flex items-center gap-1.5 ${
-                !currentViolations.some((v) => v.ruleNumber === 2)
-                  ? 'bg-slate-800/80 border-slate-700 text-slate-300'
-                  : 'bg-red-950/80 border-red-600 text-red-200'
+                currentViolation?.ruleNumber === 2
+                  ? 'bg-red-950/80 border-red-600 text-red-200'
+                  : 'bg-slate-800/80 border-slate-700 text-slate-300'
               }`}
             >
               <div
                 className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${
-                  !currentViolations.some((v) => v.ruleNumber === 2)
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-red-600 text-white font-bold'
+                  currentViolation?.ruleNumber === 2 ? 'bg-red-600 text-white font-bold' : 'bg-emerald-600 text-white'
                 }`}
               >
-                {!currentViolations.some((v) => v.ruleNumber === 2) ? '✓' : '!'}
+                {currentViolation?.ruleNumber === 2 ? '!' : '✓'}
               </div>
               <span className="truncate">2. Pai c/ meninas só c/ Mãe</span>
             </div>
@@ -259,19 +257,17 @@ export const RiverBoard: React.FC<RiverBoardProps> = ({
             {/* Rule 3 */}
             <div
               className={`p-1.5 rounded-lg border flex items-center gap-1.5 ${
-                !currentViolations.some((v) => v.ruleNumber === 3)
-                  ? 'bg-slate-800/80 border-slate-700 text-slate-300'
-                  : 'bg-red-950/80 border-red-600 text-red-200'
+                currentViolation?.ruleNumber === 3
+                  ? 'bg-red-950/80 border-red-600 text-red-200'
+                  : 'bg-slate-800/80 border-slate-700 text-slate-300'
               }`}
             >
               <div
                 className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${
-                  !currentViolations.some((v) => v.ruleNumber === 3)
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-red-600 text-white font-bold'
+                  currentViolation?.ruleNumber === 3 ? 'bg-red-600 text-white font-bold' : 'bg-emerald-600 text-white'
                 }`}
               >
-                {!currentViolations.some((v) => v.ruleNumber === 3) ? '✓' : '!'}
+                {currentViolation?.ruleNumber === 3 ? '!' : '✓'}
               </div>
               <span className="truncate">3. Mãe c/ meninos só c/ Pai</span>
             </div>
@@ -279,19 +275,17 @@ export const RiverBoard: React.FC<RiverBoardProps> = ({
             {/* Rule 4 */}
             <div
               className={`p-1.5 rounded-lg border flex items-center gap-1.5 ${
-                !currentViolations.some((v) => v.ruleNumber === 4)
-                  ? 'bg-slate-800/80 border-slate-700 text-slate-300'
-                  : 'bg-red-950/80 border-red-600 text-red-200'
+                currentViolation?.ruleNumber === 4
+                  ? 'bg-red-950/80 border-red-600 text-red-200'
+                  : 'bg-slate-800/80 border-slate-700 text-slate-300'
               }`}
             >
               <div
                 className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${
-                  !currentViolations.some((v) => v.ruleNumber === 4)
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-red-600 text-white font-bold'
+                  currentViolation?.ruleNumber === 4 ? 'bg-red-600 text-white font-bold' : 'bg-emerald-600 text-white'
                 }`}
               >
-                {!currentViolations.some((v) => v.ruleNumber === 4) ? '✓' : '!'}
+                {currentViolation?.ruleNumber === 4 ? '!' : '✓'}
               </div>
               <span className="truncate">4. Prisioneira só c/ Policial</span>
             </div>
@@ -299,19 +293,19 @@ export const RiverBoard: React.FC<RiverBoardProps> = ({
             {/* Rule 5 */}
             <div
               className={`p-1.5 rounded-lg border flex items-center gap-1.5 ${
-                canSail || raftChars.length === 0
-                  ? 'bg-slate-800/80 border-slate-700 text-slate-300'
-                  : 'bg-amber-950/80 border-amber-600 text-amber-200'
+                currentViolation?.ruleNumber === 5
+                  ? 'bg-red-950/80 border-red-600 text-red-200'
+                  : 'bg-slate-800/80 border-slate-700 text-slate-300'
               }`}
             >
               <div
                 className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${
-                  canSail
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-700 text-slate-300'
+                  currentViolation?.ruleNumber === 5
+                    ? 'bg-red-600 text-white font-bold'
+                    : 'bg-emerald-600 text-white'
                 }`}
               >
-                {canSail ? '✓' : '⛵'}
+                {currentViolation?.ruleNumber === 5 ? '!' : '✓'}
               </div>
               <span className="truncate">5. Condutor na jangada</span>
             </div>

@@ -97,14 +97,17 @@ export default function App() {
     setHistory((prev) => prev.slice(0, prev.length - 1));
   };
 
-  // Character Click
+  // Character Click (Embark / Disembark)
   const handleCharacterClick = (id: CharacterId) => {
     if (isSailing) return;
+
+    // As requested: whenever someone is removed or changed, clear any active violation message!
+    setCurrentViolation(null);
 
     const charState = characters[id];
 
     if (charState.onRaft) {
-      // Disembark from raft to current raft bank
+      // Disembark from raft to current raft bank (Removing someone)
       pushHistory(`Desembarque de ${CHARACTERS[id].name}`);
       soundManager.playStepOff();
 
@@ -118,18 +121,8 @@ export default function App() {
       };
 
       setCharacters(newCharacters);
-
-      // Validate new state
-      const violations = evaluateAllRules(newCharacters);
-      if (violations.length > 0) {
-        soundManager.playViolation();
-        setCurrentViolation(violations[0]);
-      } else {
-        setCurrentViolation(null);
-      }
     } else {
       // Embark onto raft
-      // Must be on same bank as raft
       if (charState.bank !== raftBank) {
         return;
       }
@@ -161,29 +154,25 @@ export default function App() {
       };
 
       setCharacters(newCharacters);
-
-      // Validate rules
-      const violations = evaluateAllRules(newCharacters);
-      if (violations.length > 0) {
-        soundManager.playViolation();
-        setCurrentViolation(violations[0]);
-      } else {
-        setCurrentViolation(null);
-      }
     }
   };
 
   // Sail Raft across River
+  // Rules are evaluated ONLY when requesting the raft to cross the river!
   const handleSail = () => {
     if (isSailing) return;
 
-    const raftCheck = validateRaftCanSail(characters);
-    if (!raftCheck.canSail) {
+    // 1. Check if raft has passengers
+    const raftPassengers = (Object.keys(characters) as CharacterId[]).filter(
+      (id) => characters[id].onRaft
+    );
+
+    if (raftPassengers.length === 0) {
       soundManager.playViolation();
       setCurrentViolation({
         ruleNumber: 5,
-        title: 'Impossível Navegar',
-        message: raftCheck.reason || 'Só o policial e os pais podem conduzir a jangada!',
+        title: 'Jangada Vazia',
+        message: 'A jangada está vazia! Embarque pelo menos uma pessoa capaz de conduzir (Pai, Mãe ou Policial).',
         location: 'Jangada',
         violatorIds: [],
         targetIds: [],
@@ -191,7 +180,24 @@ export default function App() {
       return;
     }
 
-    // Check if there are active violations right now
+    // 2. Check if raft has a valid pilot (Father, Mother, or Police)
+    const hasPilot = raftPassengers.some(
+      (id) => id === 'father' || id === 'mother' || id === 'police'
+    );
+    if (!hasPilot) {
+      soundManager.playViolation();
+      setCurrentViolation({
+        ruleNumber: 5,
+        title: 'Sem Condutor Válido',
+        message: 'Só o policial e os pais podem conduzir a jangada! Crianças e prisioneira não sabem navegar sozinhas.',
+        location: 'Jangada',
+        violatorIds: raftPassengers,
+        targetIds: [],
+      });
+      return;
+    }
+
+    // 3. Check current state rules (shore left behind or raft itself)
     const currentRules = evaluateAllRules(characters);
     if (currentRules.length > 0) {
       soundManager.playViolation();
@@ -199,24 +205,32 @@ export default function App() {
       return;
     }
 
-    pushHistory('Travessia do Rio');
-    soundManager.playSail();
-    setIsSailing(true);
-
+    // 4. Check destination bank when raft arrives with these passengers
     const nextBank: Bank = raftBank === 'left' ? 'right' : 'left';
-
-    // Update characters on raft to the new bank
-    const newCharacters = { ...characters };
-    (Object.keys(newCharacters) as CharacterId[]).forEach((id) => {
-      if (newCharacters[id].onRaft) {
-        newCharacters[id] = {
-          ...newCharacters[id],
+    const simulatedArrivalCharacters = { ...characters };
+    (Object.keys(simulatedArrivalCharacters) as CharacterId[]).forEach((id) => {
+      if (simulatedArrivalCharacters[id].onRaft) {
+        simulatedArrivalCharacters[id] = {
+          ...simulatedArrivalCharacters[id],
           bank: nextBank,
         };
       }
     });
 
-    setCharacters(newCharacters);
+    const arrivalViolations = evaluateAllRules(simulatedArrivalCharacters);
+    if (arrivalViolations.length > 0) {
+      soundManager.playViolation();
+      setCurrentViolation(arrivalViolations[0]);
+      return;
+    }
+
+    // All rules passed! Clear any violation and execute the crossing
+    setCurrentViolation(null);
+    pushHistory('Travessia do Rio');
+    soundManager.playSail();
+    setIsSailing(true);
+
+    setCharacters(simulatedArrivalCharacters);
     setRaftBank(nextBank);
     setMovesCount((prev) => prev + 1);
 
@@ -224,18 +238,11 @@ export default function App() {
     setTimeout(() => {
       setIsSailing(false);
 
-      // Check rules at the new bank
-      const postCrossingViolations = evaluateAllRules(newCharacters);
-      if (postCrossingViolations.length > 0) {
-        soundManager.playViolation();
-        setCurrentViolation(postCrossingViolations[0]);
-      } else {
-        // Check victory
-        if (checkVictory(newCharacters)) {
-          soundManager.playVictory();
-          setIsWon(true);
-          setIsTimerRunning(false);
-        }
+      // Check victory
+      if (checkVictory(simulatedArrivalCharacters)) {
+        soundManager.playVictory();
+        setIsWon(true);
+        setIsTimerRunning(false);
       }
     }, 1000);
   };
@@ -283,8 +290,8 @@ export default function App() {
     setCurrentViolation(null);
   };
 
-  const currentViolations = evaluateAllRules(characters);
-  const raftCanSail = validateRaftCanSail(characters).canSail && currentViolations.length === 0;
+  const raftPassengersCount = Object.values(characters).filter((c) => c.onRaft).length;
+  const canSail = raftPassengersCount > 0 && !isSailing;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none antialiased">
@@ -315,8 +322,8 @@ export default function App() {
             isSailing={isSailing}
             onCharacterClick={handleCharacterClick}
             onSail={handleSail}
-            canSail={raftCanSail}
-            currentViolations={currentViolations}
+            canSail={canSail}
+            currentViolation={currentViolation}
             hintPassengers={hintStep ? hintStep.passengers : []}
           />
         )}

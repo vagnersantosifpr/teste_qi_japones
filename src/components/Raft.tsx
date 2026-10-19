@@ -102,18 +102,13 @@ export const Raft: React.FC<RaftProps> = ({
             <line x1="20" y1="22" x2="200" y2="22" stroke="#ca8a04" strokeWidth="0.8" opacity="0.6" />
           </svg>
 
-          {/* Quick action button when raft has valid passengers */}
+          {/* Quick action button when raft has passengers */}
           {!isSailing && passengers.length > 0 && (
             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center">
               <button
                 onClick={onSailClick}
-                disabled={!canSail}
-                className={`px-3 py-1 rounded-full text-xs font-bold shadow-md transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                  canSail
-                    ? 'bg-red-600 hover:bg-red-500 text-white animate-pulse cursor-pointer hover:scale-105 active:scale-95 ring-2 ring-white/60'
-                    : 'bg-slate-700/80 text-slate-300 cursor-not-allowed'
-                }`}
-                title={canSail ? 'Clique para atravessar o rio' : 'Falta um condutor (Pai, Mãe ou Policial)'}
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold shadow-lg transition-all whitespace-nowrap flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white cursor-pointer hover:scale-105 active:scale-95 ring-2 ring-white/60 animate-pulse"
+                title="Clique para tentar atravessar o rio"
               >
                 <span>⛵ Atravessar</span>
               </button>
