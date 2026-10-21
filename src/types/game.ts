@@ -40,3 +40,15 @@ export interface GameSnapshot {
   movesCount: number;
   description: string;
 }
+
+export interface LogicStats {
+  movesCount: number;
+  hintsUsedCount: number;
+  wrongAttemptsCount: number;
+  undosCount: number;
+  unnecessaryMovesCount: number;
+  totalWrongOrUnnecessary: number;
+  efficiencyIndex: number;
+  logicScore: number;
+  rankTitle: string;
+}

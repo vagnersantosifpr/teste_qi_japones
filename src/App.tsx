@@ -12,6 +12,8 @@ import { ViolationBanner } from './components/ViolationBanner';
 import { RulesModal } from './components/RulesModal';
 import { HintModal } from './components/HintModal';
 import { VictoryModal } from './components/VictoryModal';
+import { StatsModal } from './components/StatsModal';
+import { calculateLogicStats } from './utils/stats';
 
 export default function App() {
   const [started, setStarted] = useState(false);
@@ -30,8 +32,14 @@ export default function App() {
   const [isWon, setIsWon] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showHintModal, setShowHintModal] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
   const [hintStep, setHintStep] = useState<SolverStep | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Evaluative logic metrics tracked across the session
+  const [hintsUsedCount, setHintsUsedCount] = useState(0);
+  const [wrongAttemptsCount, setWrongAttemptsCount] = useState(0);
+  const [undosCount, setUndosCount] = useState(0);
 
   // Student identification state
   const [studentName, setStudentName] = useState(() => {
@@ -88,6 +96,9 @@ export default function App() {
     setCurrentViolation(null);
     setHistory([]);
     setIsWon(false);
+    setHintsUsedCount(0);
+    setWrongAttemptsCount(0);
+    setUndosCount(0);
   };
 
   // Push Snapshot
@@ -105,6 +116,7 @@ export default function App() {
   const handleUndo = () => {
     if (history.length === 0 || isSailing) return;
     soundManager.playClick();
+    setUndosCount((prev) => prev + 1);
     const last = history[history.length - 1];
     setRaftBank(last.raftBank);
     setCharacters(last.characters);
@@ -191,6 +203,7 @@ export default function App() {
 
     if (raftPassengers.length === 0) {
       soundManager.playViolation();
+      setWrongAttemptsCount((prev) => prev + 1);
       setCurrentViolation({
         ruleNumber: 5,
         title: 'Jangada Vazia',
@@ -208,6 +221,7 @@ export default function App() {
     );
     if (!hasPilot) {
       soundManager.playViolation();
+      setWrongAttemptsCount((prev) => prev + 1);
       setCurrentViolation({
         ruleNumber: 5,
         title: 'Sem Condutor Válido',
@@ -223,6 +237,7 @@ export default function App() {
     const currentRules = evaluateAllRules(characters);
     if (currentRules.length > 0) {
       soundManager.playViolation();
+      setWrongAttemptsCount((prev) => prev + 1);
       setCurrentViolation(currentRules[0]);
       return;
     }
@@ -242,6 +257,7 @@ export default function App() {
     const arrivalViolations = evaluateAllRules(simulatedArrivalCharacters);
     if (arrivalViolations.length > 0) {
       soundManager.playViolation();
+      setWrongAttemptsCount((prev) => prev + 1);
       setCurrentViolation(arrivalViolations[0]);
       return;
     }
@@ -278,6 +294,7 @@ export default function App() {
   // Open Hint
   const handleOpenHint = () => {
     soundManager.playClick();
+    setHintsUsedCount((prev) => prev + 1);
     const leftList = (Object.keys(characters) as CharacterId[]).filter(
       (id) => characters[id].bank === 'left'
     );
@@ -321,6 +338,13 @@ export default function App() {
   const raftPassengersCount = Object.values(characters).filter((c) => c.onRaft).length;
   const canSail = raftPassengersCount > 0 && !isSailing;
 
+  const stats = calculateLogicStats(
+    movesCount,
+    hintsUsedCount,
+    wrongAttemptsCount,
+    undosCount
+  );
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none antialiased">
       {/* Top Header */}
@@ -331,6 +355,7 @@ export default function App() {
         soundEnabled={soundEnabled}
         isWon={isWon}
         studentName={studentName}
+        stats={stats}
         onUndo={handleUndo}
         onRestart={handleRestart}
         onToggleSound={handleToggleSound}
@@ -339,6 +364,10 @@ export default function App() {
           setShowRulesModal(true);
         }}
         onOpenHint={handleOpenHint}
+        onOpenStats={() => {
+          soundManager.playClick();
+          setShowStatsModal(true);
+        }}
       />
 
       {/* Main Container */}
@@ -384,12 +413,22 @@ export default function App() {
         onApplyHint={handleApplyHint}
       />
 
+      {/* Intermediate Stats Modal */}
+      <StatsModal
+        isOpen={showStatsModal}
+        onClose={() => setShowStatsModal(false)}
+        stats={stats}
+        timerSeconds={timerSeconds}
+        studentName={studentName}
+      />
+
       {/* Victory Celebration Modal */}
       <VictoryModal
         isOpen={isWon}
         movesCount={movesCount}
         timerSeconds={timerSeconds}
         studentName={studentName}
+        stats={stats}
         onStudentNameChange={handleStudentNameChange}
         onRestart={handleRestart}
       />

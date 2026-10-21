@@ -1,12 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
-import { Trophy, Clock, RotateCcw, Share2, Sparkles, CheckCircle2, User, Copy, Check, Edit2 } from 'lucide-react';
+import {
+  Trophy,
+  Clock,
+  RotateCcw,
+  Sparkles,
+  CheckCircle2,
+  User,
+  Copy,
+  Check,
+  Edit2,
+  Lightbulb,
+  AlertOctagon,
+  Zap,
+  Award,
+} from 'lucide-react';
+import { LogicStats } from '../types/game';
 
 interface VictoryModalProps {
   isOpen: boolean;
   movesCount: number;
   timerSeconds: number;
   studentName: string;
+  stats: LogicStats;
   onStudentNameChange?: (name: string) => void;
   onRestart: () => void;
 }
@@ -16,6 +32,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   movesCount,
   timerSeconds,
   studentName,
+  stats,
   onStudentNameChange,
   onRestart,
 }) => {
@@ -65,12 +82,24 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
       month: '2-digit',
       year: 'numeric',
     });
-    const text = `🎓 COMPROVANTE · TESTE DE QI JAPONÊS (TRAVESSIA DO RIO)\n👤 Aluno(a): ${displayName}\n⏱️ Tempo Final: ${timeFormatted}\n⛵ Travessias: ${movesCount} (Mínimo teórico: 17)\n🏆 Status: Resolvido com Sucesso!\n📅 Data: ${today}`;
+    const text = `🎓 COMPROVANTE DE AVALIAÇÃO · TESTE DE QI JAPONÊS (TRAVESSIA DO RIO)\n` +
+      `👤 Aluno(a): ${displayName}\n` +
+      `⏱️ Tempo Final: ${timeFormatted}\n` +
+      `⛵ Travessias Realizadas: ${movesCount} (Mínimo Ideal: 17)\n` +
+      `🎯 Índice de Eficiência: ${stats.efficiencyIndex}%\n` +
+      `💡 Pedidos de Dica: ${stats.hintsUsedCount}\n` +
+      `⚠️ Movimentos Errados/Desnecessários: ${stats.totalWrongOrUnnecessary} (${stats.wrongAttemptsCount} infrações, ${stats.undosCount} desfazeres, ${stats.unnecessaryMovesCount} extras)\n` +
+      `🧠 Índice Global de Lógica: ${stats.logicScore}% (${stats.rankTitle})\n` +
+      `🏆 Status: Desafio Concluído com Sucesso!\n` +
+      `📅 Data: ${today}`;
 
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    }).catch(() => {});
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      })
+      .catch(() => {});
   };
 
   return (
@@ -146,42 +175,96 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           </div>
         </div>
 
-        <p className="text-xs sm:text-sm text-slate-300 mb-5">
-          Todas as 8 pessoas atravessaram o rio em segurança, cumprindo rigorosamente todas as regras de proteção e navegação!
-        </p>
+        {/* The 3 Core Evaluative Metrics Requested by Professor */}
+        <div className="my-4 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider block mb-2.5 text-left flex items-center justify-between">
+            <span>Avaliação de Métricas Lógicas:</span>
+            <span className="text-amber-400 font-mono text-[11px]">Ideal: 17 Travessias</span>
+          </span>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
-            <span className="text-xs text-slate-400 block mb-1">Tempo Total</span>
-            <div className="flex items-center justify-center gap-1 text-xl font-bold font-mono text-white">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            {/* 1. Quantidade de pedidos de dicas */}
+            <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 flex flex-col justify-between">
+              <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-emerald-400">
+                <Lightbulb className="w-3 h-3" />
+                <span>Dicas</span>
+              </div>
+              <div className="text-xl font-black font-mono text-white my-0.5">
+                {stats.hintsUsedCount}
+              </div>
+              <span className="text-[9px] text-slate-400">
+                {stats.hintsUsedCount === 0 ? 'Sem auxílio' : `${stats.hintsUsedCount} pedida(s)`}
+              </span>
+            </div>
+
+            {/* 2. Quantidade de movimentos errados ou desnecessários */}
+            <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 flex flex-col justify-between">
+              <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-rose-400">
+                <AlertOctagon className="w-3 h-3" />
+                <span>Erros / Extras</span>
+              </div>
+              <div className="text-xl font-black font-mono text-rose-300 my-0.5">
+                {stats.totalWrongOrUnnecessary}
+              </div>
+              <span className="text-[9px] text-slate-400" title={`${stats.wrongAttemptsCount} infrações + ${stats.undosCount} desfazeres + ${stats.unnecessaryMovesCount} extras`}>
+                {stats.wrongAttemptsCount} inf. + {stats.unnecessaryMovesCount} ext.
+              </span>
+            </div>
+
+            {/* 3. Índice de eficiência */}
+            <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 flex flex-col justify-between">
+              <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-amber-400">
+                <Zap className="w-3 h-3" />
+                <span>Eficiência</span>
+              </div>
+              <div className="text-xl font-black font-mono text-amber-300 my-0.5">
+                {stats.efficiencyIndex}%
+              </div>
+              <span className="text-[9px] text-slate-400">
+                {stats.efficiencyIndex === 100 ? 'Máxima (100%)' : `Base 17/${movesCount}`}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Global Time & Moves Summary */}
+        <div className="grid grid-cols-2 gap-2.5 mb-4">
+          <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/80">
+            <span className="text-[11px] text-slate-400 block mb-0.5">Tempo Total</span>
+            <div className="flex items-center justify-center gap-1 text-lg font-bold font-mono text-white">
               <Clock className="w-4 h-4 text-blue-400" />
               <span>{timeFormatted}</span>
             </div>
-            <span className="text-[10px] text-emerald-400 mt-1 block">
-              {isFasterThanJapanAvg ? '⚡ Mais rápido que a média no Japão!' : 'Tempo registrado'}
+            <span className="text-[9px] text-emerald-400 mt-0.5 block">
+              {isFasterThanJapanAvg ? '⚡ Mais rápido que a média japonesa (15m)' : 'Tempo registrado'}
             </span>
           </div>
 
-          <div className="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
-            <span className="text-xs text-slate-400 block mb-1">Travessias Feitas</span>
-            <div className="text-xl font-bold font-mono text-amber-400">
+          <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/80">
+            <span className="text-[11px] text-slate-400 block mb-0.5">Total de Travessias</span>
+            <div className="text-lg font-bold font-mono text-amber-400">
               {movesCount}
             </div>
-            <span className="text-[10px] text-slate-400 mt-1 block">
-              {isOptimal ? '⭐ Recorde Perfeito (17)!' : 'Mínimo teórico: 17'}
+            <span className="text-[9px] text-slate-400 mt-0.5 block">
+              {isOptimal ? '⭐ Recorde Teórico Mínimo (17)!' : 'Mínimo ideal: 17 travessias'}
             </span>
           </div>
         </div>
 
-        {/* Logical Evaluation Box */}
+        {/* Logical Evaluation Box with Rank */}
         <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-left text-xs text-slate-300 space-y-1.5 mb-5">
-          <div className="flex items-center gap-2 text-emerald-400 font-bold">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>Avaliação de Raciocínio Lógico:</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Parecer de Raciocínio Lógico:</span>
+            </div>
+            <div className="flex items-center gap-1 font-mono font-bold text-amber-300 text-xs">
+              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <span>{stats.rankTitle} ({stats.logicScore}%)</span>
+            </div>
           </div>
-          <p className="leading-relaxed">
-            Parabéns, <strong>{displayName}</strong>! Você demonstrou domínio sobre espaço de estados e restrições cruzadas, habilidades fundamentais em lógica de programação e algoritmos.
+          <p className="leading-relaxed text-slate-300 text-[11px]">
+            Parabéns, <strong>{displayName}</strong>! Seu índice de eficiência alcançou <strong>{stats.efficiencyIndex}%</strong> com <strong>{stats.hintsUsedCount} dica(s)</strong> solicitada(s) e <strong>{stats.totalWrongOrUnnecessary} movimento(s) errados/desnecessários</strong>.
           </p>
         </div>
 
@@ -195,7 +278,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
             {copied ? (
               <>
                 <Check className="w-4 h-4 text-emerald-400" />
-                <span className="text-emerald-400">Copiado para Área de Transferência!</span>
+                <span className="text-emerald-400">Relatório Copiado!</span>
               </>
             ) : (
               <>
@@ -217,3 +300,4 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     </div>
   );
 };
+
