@@ -41,6 +41,14 @@ export default function App() {
   const [wrongAttemptsCount, setWrongAttemptsCount] = useState(0);
   const [undosCount, setUndosCount] = useState(0);
 
+  // Cumulative session tracking across restarts
+  const [restartsCount, setRestartsCount] = useState(0);
+  const [accumulatedPastMoves, setAccumulatedPastMoves] = useState(0);
+  const [accumulatedPastHints, setAccumulatedPastHints] = useState(0);
+  const [accumulatedPastWrong, setAccumulatedPastWrong] = useState(0);
+  const [accumulatedPastUndos, setAccumulatedPastUndos] = useState(0);
+  const [accumulatedPastTime, setAccumulatedPastTime] = useState(0);
+
   // Student identification state
   const [studentName, setStudentName] = useState(() => {
     try {
@@ -84,15 +92,50 @@ export default function App() {
     setIsTimerRunning(true);
   };
 
-  // Restart Game
+  // Restart Game (Maintains global efficiency, increments restart count, accumulates past moves)
   const handleRestart = () => {
     soundManager.playClick();
+
+    // Accumulate the current attempt's metrics into the global session metrics
+    setRestartsCount((prev) => prev + 1);
+    setAccumulatedPastMoves((prev) => prev + movesCount);
+    setAccumulatedPastHints((prev) => prev + hintsUsedCount);
+    setAccumulatedPastWrong((prev) => prev + wrongAttemptsCount);
+    setAccumulatedPastUndos((prev) => prev + undosCount);
+    setAccumulatedPastTime((prev) => prev + timerSeconds);
+
+    // Reset board and current run state
     setRaftBank('left');
     setCharacters(INITIAL_CHARACTERS_STATE);
     setIsSailing(false);
     setMovesCount(0);
     setTimerSeconds(0);
     setIsTimerRunning(true);
+    setCurrentViolation(null);
+    setHistory([]);
+    setIsWon(false);
+    setHintsUsedCount(0);
+    setWrongAttemptsCount(0);
+    setUndosCount(0);
+  };
+
+  // Full reset for a new student / clean session
+  const handleNewStudent = () => {
+    soundManager.playClick();
+    setStarted(false);
+    setRestartsCount(0);
+    setAccumulatedPastMoves(0);
+    setAccumulatedPastHints(0);
+    setAccumulatedPastWrong(0);
+    setAccumulatedPastUndos(0);
+    setAccumulatedPastTime(0);
+
+    setRaftBank('left');
+    setCharacters(INITIAL_CHARACTERS_STATE);
+    setIsSailing(false);
+    setMovesCount(0);
+    setTimerSeconds(0);
+    setIsTimerRunning(false);
     setCurrentViolation(null);
     setHistory([]);
     setIsWon(false);
@@ -342,7 +385,12 @@ export default function App() {
     movesCount,
     hintsUsedCount,
     wrongAttemptsCount,
-    undosCount
+    undosCount,
+    restartsCount,
+    accumulatedPastMoves,
+    accumulatedPastHints,
+    accumulatedPastWrong,
+    accumulatedPastUndos
   );
 
   return (
@@ -431,6 +479,7 @@ export default function App() {
         stats={stats}
         onStudentNameChange={handleStudentNameChange}
         onRestart={handleRestart}
+        onNewStudent={handleNewStudent}
       />
     </div>
   );

@@ -62,6 +62,35 @@ export const StatsModal: React.FC<StatsModalProps> = ({
           </div>
         </div>
 
+        {/* Restart Status Banner */}
+        <div
+          className={`p-3 rounded-xl border mb-4 text-xs flex items-center justify-between ${
+            stats.achievedWithoutRestart
+              ? 'bg-blue-950/70 border-blue-600/50 text-blue-200'
+              : 'bg-amber-950/70 border-amber-600/50 text-amber-200'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base">{stats.achievedWithoutRestart ? '⭐' : '🔄'}</span>
+            <div>
+              <span className="font-bold block text-white text-xs">
+                {stats.achievedWithoutRestart
+                  ? 'Resolução em 1ª Tentativa Direta (Sem Reiniciar)'
+                  : `Tentativa #${stats.attemptNumber} · ${stats.restartsCount} Reinicialização(ões)`}
+              </span>
+              <span className="text-[10px] opacity-80">
+                {stats.achievedWithoutRestart
+                  ? 'O aluno ainda não solicitou nenhum reinício nesta sessão.'
+                  : `O aluno reiniciou o teste ${stats.restartsCount} vez(es) durante a resolução.`}
+              </span>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="text-[10px] uppercase font-bold block text-slate-300">Eficiência Global</span>
+            <span className="font-mono font-black text-amber-300 text-sm">{stats.globalEfficiencyIndex}%</span>
+          </div>
+        </div>
+
         {/* The 3 Core Required Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-4">
           {/* 1. Quantidade de pedidos de dicas */}
@@ -74,7 +103,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
               {stats.hintsUsedCount}
             </div>
             <span className="text-[10px] text-slate-400">
-              {stats.hintsUsedCount === 0 ? 'Sem auxílio (Autônomo)' : `${stats.hintsUsedCount} consulta(s)`}
+              {stats.restartsCount > 0 ? `Total sessão: ${stats.sessionTotalHints}` : stats.hintsUsedCount === 0 ? 'Sem auxílio' : `${stats.hintsUsedCount} pedida(s)`}
             </span>
           </div>
 
@@ -88,7 +117,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
               {stats.totalWrongOrUnnecessary}
             </div>
             <span className="text-[10px] text-slate-400">
-              Erros & desnecessários
+              {stats.restartsCount > 0 ? `Total sessão: ${stats.sessionTotalWrongOrUnnecessary}` : 'Erros & desnecessários'}
             </span>
           </div>
 
@@ -102,7 +131,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
               {stats.efficiencyIndex}%
             </div>
             <span className="text-[10px] text-slate-400">
-              Ideal: 17 travessias
+              {stats.restartsCount > 0 ? `Global: ${stats.globalEfficiencyIndex}%` : 'Ideal: 17 travessias'}
             </span>
           </div>
         </div>
@@ -111,17 +140,30 @@ export const StatsModal: React.FC<StatsModalProps> = ({
         <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 space-y-2 mb-4 text-xs">
           <div className="text-slate-300 font-bold flex items-center justify-between pb-1.5 border-b border-slate-800">
             <span>Detalhamento dos Movimentos:</span>
-            <span className="text-slate-400 font-mono">Total de Travessias: {stats.movesCount}</span>
+            <span className="text-slate-400 font-mono">
+              Tentativa: {stats.movesCount} | Sessão Total: {stats.sessionTotalMoves}
+            </span>
           </div>
 
           <div className="flex items-center justify-between text-slate-400">
-            <span>Tentativas com quebra de regras (bloqueadas):</span>
-            <span className="font-mono text-rose-400 font-semibold">{stats.wrongAttemptsCount}</span>
+            <span>Tentativas de travessia bloqueadas (regras):</span>
+            <span className="font-mono text-rose-400 font-semibold">
+              {stats.wrongAttemptsCount} {stats.restartsCount > 0 && `(Total: ${stats.sessionTotalWrongAttempts})`}
+            </span>
           </div>
 
           <div className="flex items-center justify-between text-slate-400">
             <span>Passos desfeitos (Undos):</span>
-            <span className="font-mono text-slate-300 font-semibold">{stats.undosCount}</span>
+            <span className="font-mono text-slate-300 font-semibold">
+              {stats.undosCount} {stats.restartsCount > 0 && `(Total: ${stats.sessionTotalUndos})`}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-slate-400">
+            <span>Reinicializações solicitadas pelo usuário:</span>
+            <span className={`font-mono font-bold ${stats.restartsCount === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {stats.restartsCount} {stats.restartsCount === 0 ? '(Nenhuma - 1ª tentativa)' : 'vez(es)'}
+            </span>
           </div>
 
           <div className="flex items-center justify-between text-slate-400">
@@ -132,7 +174,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
           <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-blue-300 font-bold">
               <Award className="w-4 h-4 text-amber-400" />
-              <span>Índice Global de Lógica:</span>
+              <span>Classificação Atual:</span>
             </div>
             <div className="text-right">
               <span className="text-base font-extrabold text-white font-mono">{stats.logicScore}%</span>

@@ -51,4 +51,15 @@ export interface LogicStats {
   efficiencyIndex: number;
   logicScore: number;
   rankTitle: string;
+  // Métricas Globais e de Reinicialização
+  restartsCount: number;
+  attemptNumber: number;
+  achievedWithoutRestart: boolean;
+  sessionTotalMoves: number;
+  sessionTotalHints: number;
+  sessionTotalWrongAttempts: number;
+  sessionTotalUndos: number;
+  sessionTotalWrongOrUnnecessary: number;
+  globalEfficiencyIndex: number;
+  globalLogicScore: number;
 }

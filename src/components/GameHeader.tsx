@@ -61,79 +61,119 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
           </div>
         </div>
 
-        {/* Zone 2: Telemetry & In-Game Metrics (Timer + Moves + Live Efficiency & Errors) */}
-        <div className="flex items-center gap-3 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
-          <div className="flex items-center gap-1.5 text-slate-300">
-            <span className="text-slate-400">Tempo:</span>
-            <span
-              className={`font-mono tabular-nums font-semibold ${
-                isWon ? 'text-emerald-400 font-bold' : 'text-white'
-              }`}
-            >
-              {formatTime(timerSeconds)}
-            </span>
-            {isWon && (
-              <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600/50 px-1 py-0.2 rounded font-bold uppercase tracking-wider">
-                Parado
+          {/* Zone 2: Telemetry & In-Game Metrics */}
+          <div className="flex items-center gap-2.5 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
+            {/* Attempt badge */}
+            <div className="flex items-center gap-1">
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                  stats.restartsCount === 0
+                    ? 'bg-blue-950 text-blue-300 border border-blue-600/50'
+                    : 'bg-amber-950 text-amber-300 border border-amber-600/50'
+                }`}
+                title={
+                  stats.restartsCount === 0
+                    ? 'Primeira tentativa (sem reiniciar)'
+                    : `Tentativa atual #${stats.attemptNumber} (${stats.restartsCount} reinício(s) solicitado(s))`
+                }
+              >
+                {stats.restartsCount === 0 ? '1ª Tentativa' : `Tentativa #${stats.attemptNumber}`}
               </span>
-            )}
-          </div>
+            </div>
 
-          <span className="text-slate-600 hidden sm:inline" aria-hidden="true">
-            |
-          </span>
-
-          <div className="flex items-center gap-1 text-slate-300">
-            <span className="text-slate-400">Travessias:</span>
-            <span className="font-mono tabular-nums font-bold text-amber-400">
-              {movesCount}
+            <span className="text-slate-600" aria-hidden="true">
+              |
             </span>
-          </div>
 
-          <span className="text-slate-600 hidden sm:inline" aria-hidden="true">
-            |
-          </span>
+            <div className="flex items-center gap-1.5 text-slate-300">
+              <span className="text-slate-400">Tempo:</span>
+              <span
+                className={`font-mono tabular-nums font-semibold ${
+                  isWon ? 'text-emerald-400 font-bold' : 'text-white'
+                }`}
+              >
+                {formatTime(timerSeconds)}
+              </span>
+              {isWon && (
+                <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600/50 px-1 py-0.2 rounded font-bold uppercase tracking-wider">
+                  Parado
+                </span>
+              )}
+            </div>
 
-          {/* 3) Live Efficiency Indicator */}
-          <div className="hidden sm:flex items-center gap-1 text-slate-300" title="Eficiência: 17 / total de travessias realizadas">
-            <span className="text-slate-400">Eficiência:</span>
-            <span
-              className={`font-mono tabular-nums font-bold ${
-                stats.efficiencyIndex >= 85
-                  ? 'text-emerald-400'
-                  : stats.efficiencyIndex >= 65
-                  ? 'text-amber-400'
-                  : 'text-rose-400'
-              }`}
+            <span className="text-slate-600 hidden sm:inline" aria-hidden="true">
+              |
+            </span>
+
+            <div className="flex items-center gap-1 text-slate-300">
+              <span className="text-slate-400">Travessias:</span>
+              <span className="font-mono tabular-nums font-bold text-amber-400">
+                {movesCount}
+              </span>
+            </div>
+
+            <span className="text-slate-600 hidden sm:inline" aria-hidden="true">
+              |
+            </span>
+
+            {/* Live Efficiency & Global Efficiency */}
+            <div
+              className="hidden sm:flex items-center gap-1.5 text-slate-300"
+              title={`Tentativa atual: ${stats.efficiencyIndex}% | Eficiência Global da Sessão: ${stats.globalEfficiencyIndex}% (17 / ${stats.sessionTotalMoves} travessias acumuladas)`}
             >
-              {stats.efficiencyIndex}%
+              <span className="text-slate-400">Efic:</span>
+              <span
+                className={`font-mono tabular-nums font-bold ${
+                  stats.efficiencyIndex >= 85
+                    ? 'text-emerald-400'
+                    : stats.efficiencyIndex >= 65
+                    ? 'text-amber-400'
+                    : 'text-rose-400'
+                }`}
+              >
+                {stats.efficiencyIndex}%
+              </span>
+              {stats.restartsCount > 0 && (
+                <span className="text-[10px] font-mono text-slate-400" title="Eficiência Global Acumulada">
+                  (Global: {stats.globalEfficiencyIndex}%)
+                </span>
+              )}
+            </div>
+
+            <span className="text-slate-600 hidden md:inline" aria-hidden="true">
+              |
             </span>
-          </div>
 
-          <span className="text-slate-600 hidden md:inline" aria-hidden="true">
-            |
-          </span>
+            {/* Movimentos Errados ou Desnecessários */}
+            <div
+              className="hidden md:flex items-center gap-1 text-slate-300"
+              title={`Erros na tentativa: ${stats.totalWrongOrUnnecessary} | Acumulado na sessão: ${stats.sessionTotalWrongOrUnnecessary}`}
+            >
+              <span className="text-slate-400">Erros:</span>
+              <span
+                className={`font-mono tabular-nums font-bold ${
+                  stats.totalWrongOrUnnecessary > 0 ? 'text-rose-400' : 'text-slate-300'
+                }`}
+              >
+                {stats.totalWrongOrUnnecessary}
+              </span>
+            </div>
 
-          {/* 2) Movimentos Errados ou Desnecessários */}
-          <div className="hidden md:flex items-center gap-1 text-slate-300" title="Movimentos errados ou desnecessários">
-            <span className="text-slate-400">Erros/Extras:</span>
-            <span className={`font-mono tabular-nums font-bold ${stats.totalWrongOrUnnecessary > 0 ? 'text-rose-400' : 'text-slate-300'}`}>
-              {stats.totalWrongOrUnnecessary}
+            <span className="text-slate-600 hidden lg:inline" aria-hidden="true">
+              |
             </span>
-          </div>
 
-          <span className="text-slate-600 hidden md:inline" aria-hidden="true">
-            |
-          </span>
-
-          {/* 1) Quantidade de pedidos de dicas */}
-          <div className="hidden md:flex items-center gap-1 text-slate-300" title="Quantidade de pedidos de dicas">
-            <span className="text-slate-400">Dicas:</span>
-            <span className="font-mono tabular-nums font-bold text-emerald-400">
-              {stats.hintsUsedCount}
-            </span>
+            {/* Quantidade de pedidos de dicas */}
+            <div
+              className="hidden lg:flex items-center gap-1 text-slate-300"
+              title={`Dicas na tentativa: ${stats.hintsUsedCount} | Acumulado: ${stats.sessionTotalHints}`}
+            >
+              <span className="text-slate-400">Dicas:</span>
+              <span className="font-mono tabular-nums font-bold text-emerald-400">
+                {stats.hintsUsedCount}
+              </span>
+            </div>
           </div>
-        </div>
 
         {/* Zone 3: Interactive Controls */}
         <div className="flex items-center gap-2">
