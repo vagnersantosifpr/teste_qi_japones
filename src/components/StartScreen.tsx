@@ -306,14 +306,19 @@ export const StartScreen: React.FC<StartScreenProps> = ({
         </div>
 
         {/* Historical & Pedagogical Context Footer */}
-        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800 text-slate-400 text-xs">
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isSpace ? 'Desafio de Algoritmos e Estados Ótimos' : 'Tempo médio de resolução no Japão: 15 minutos'}</span>
+        <div className="w-full flex flex-col gap-3 pt-3 border-t border-slate-800 text-slate-400 text-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span>{isSpace ? 'Desafio de Algoritmos e Estados Ótimos' : 'Tempo médio de resolução: 15 minutos'}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Award className="w-3.5 h-3.5 text-blue-400" />
+              <span>Mínimo Teórico: <strong>17 travessias</strong></span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Award className="w-3.5 h-3.5 text-blue-400" />
-            <span>Mínimo Teórico: <strong>17 travessias</strong> para a solução perfeita</span>
+          <div className="text-[10px] text-slate-500 text-center italic border-t border-slate-800 pt-2">
+            Versão e temática desenvolvidas por: Prof. Me. Vagner Simões Santos (IFPR - Campus Assis Chateaubriand), 2026.
           </div>
         </div>
       </div>
