@@ -10,6 +10,9 @@ export type CharacterId =
 
 export type Bank = 'left' | 'right';
 
+export type GamePhase = 'classic' | 'space';
+export type ClassicSubtheme = 'teams' | 'family';
+
 export interface CharacterDef {
   id: CharacterId;
   name: string;
@@ -29,7 +32,7 @@ export interface RuleViolation {
   ruleNumber: number;
   title: string;
   message: string;
-  location: 'Margem Esquerda' | 'Margem Direita' | 'Jangada';
+  location: 'Margem Esquerda' | 'Margem Direita' | 'Jangada' | 'Cápsula' | 'Módulo Alfa' | 'Nave de Evacuação' | string;
   violatorIds: CharacterId[];
   targetIds: CharacterId[];
 }

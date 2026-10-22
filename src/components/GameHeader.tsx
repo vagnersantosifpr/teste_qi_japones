@@ -1,6 +1,6 @@
 import React from 'react';
 import { Volume2, VolumeX, RotateCcw, HelpCircle, Lightbulb, Undo2, User, BarChart3, Zap } from 'lucide-react';
-import { LogicStats } from '../types/game';
+import { LogicStats, GamePhase } from '../types/game';
 
 interface GameHeaderProps {
   timerSeconds: number;
@@ -10,6 +10,8 @@ interface GameHeaderProps {
   isWon?: boolean;
   studentName?: string;
   stats: LogicStats;
+  phase?: GamePhase;
+  onSelectPhase?: (phase: GamePhase) => void;
   onUndo: () => void;
   onRestart: () => void;
   onToggleSound: () => void;
@@ -26,6 +28,8 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
   isWon = false,
   studentName = '',
   stats,
+  phase = 'classic',
+  onSelectPhase,
   onUndo,
   onRestart,
   onToggleSound,
@@ -42,18 +46,55 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
   return (
     <header className="w-full bg-slate-900/95 backdrop-blur-md text-white border-b border-slate-800 px-4 lg:px-8 py-3 shrink-0 shadow-lg z-30">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-        {/* Zone 1: Title & Brand */}
+        {/* Zone 1: Title & Phase Selector */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-md">
-            川
+          <div
+            className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-white shadow-md text-base ${
+              phase === 'space'
+                ? 'bg-gradient-to-tr from-cyan-600 to-blue-700 shadow-cyan-500/30'
+                : 'bg-blue-600 shadow-blue-500/30'
+            }`}
+          >
+            {phase === 'space' ? '🪐' : '川'}
           </div>
           <div>
-            <h1 className="text-base lg:text-lg font-bold tracking-tight text-white whitespace-nowrap">
-              Teste de QI Japonês
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base lg:text-lg font-bold tracking-tight text-white whitespace-nowrap">
+                {phase === 'space' ? 'Fase 2: Estação Espacial' : 'Teste de QI Japonês'}
+              </h1>
+              {/* Phase Switch Tabs */}
+              {onSelectPhase && (
+                <div className="flex items-center bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-[10px] font-bold">
+                  <button
+                    onClick={() => onSelectPhase('classic')}
+                    className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      phase === 'classic'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Fase 1: Travessia do Rio Clássica (Japão 2009)"
+                  >
+                    🌊 Fase 1: Rio
+                  </button>
+                  <button
+                    onClick={() => onSelectPhase('space')}
+                    className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      phase === 'space'
+                        ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Fase 2: Estação Espacial Marte-01 (Evacuação Orbital)"
+                  >
+                    🚀 Fase 2: Marte
+                  </button>
+                </div>
+              )}
+            </div>
             <p className="text-[11px] text-slate-400 hidden sm:block">
               {studentName.trim() ? (
                 <span>Aluno(a): <strong className="text-blue-300">{studentName.trim()}</strong></span>
+              ) : phase === 'space' ? (
+                'Protocolo de Evacuação Orbital e Contenção Biológica'
               ) : (
                 'Enigma da Travessia do Rio (日本川渡りパズル)'
               )}

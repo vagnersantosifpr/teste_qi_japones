@@ -1,11 +1,13 @@
 import React from 'react';
-import { X, CheckCircle, AlertTriangle, BookOpen, Clock, Users, ArrowRightLeft } from 'lucide-react';
-import { CHARACTERS } from '../utils/characters';
-import { CharacterId } from '../types/game';
+import { X, CheckCircle, AlertTriangle, BookOpen, Clock, Users, ArrowRightLeft, Rocket, GraduationCap } from 'lucide-react';
+import { getCharacterDef } from '../utils/characters';
+import { CharacterId, GamePhase, ClassicSubtheme } from '../types/game';
 
 interface RulesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  phase?: GamePhase;
+  subtheme?: ClassicSubtheme;
 }
 
 const ALL_CHARS: CharacterId[] = [
@@ -19,8 +21,16 @@ const ALL_CHARS: CharacterId[] = [
   'prisoner',
 ];
 
-export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
+export const RulesModal: React.FC<RulesModalProps> = ({
+  isOpen,
+  onClose,
+  phase = 'classic',
+  subtheme = 'teams',
+}) => {
   if (!isOpen) return null;
+
+  const isSpace = phase === 'space';
+  const isTeams = !isSpace && subtheme === 'teams';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -28,7 +38,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+          className="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
           aria-label="Fechar modal"
         >
           <X className="w-5 h-5" />
@@ -36,53 +46,146 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-5">
-          <div className="p-2.5 bg-blue-600 rounded-xl text-white shadow-md">
-            <BookOpen className="w-6 h-6" />
+          <div className={`p-2.5 rounded-xl text-white shadow-md ${isSpace ? 'bg-cyan-600' : isTeams ? 'bg-emerald-600' : 'bg-blue-600'}`}>
+            {isSpace ? <Rocket className="w-6 h-6" /> : isTeams ? <GraduationCap className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Regras e Instruções do Jogo</h3>
+            <h3 className="text-xl font-bold text-white">
+              {isSpace
+                ? 'Fase 2: Protocolos de Segurança Orbital'
+                : isTeams
+                ? 'Fase 1: Regras da Gincana das Equipes'
+                : 'Regras e Instruções do Jogo (Clássico 2009)'}
+            </h3>
             <p className="text-xs text-slate-400">
-              Guia didático para o Teste de QI Japonês da Travessia do Rio
+              {isSpace
+                ? 'Manual de segurança da Estação Espacial Marte-01'
+                : isTeams
+                ? 'Adaptação pedagógica ética para o Ensino Técnico e Médio (IFPR)'
+                : 'Guia do Teste de QI Japonês da Travessia do Rio (2009)'}
             </p>
           </div>
         </div>
 
+        {/* Pedagogical Note on Theme Adaptation */}
+        {isTeams && (
+          <div className="bg-emerald-950/40 border border-emerald-600/50 rounded-xl p-3.5 mb-5 text-xs text-emerald-200">
+            <span className="font-bold text-emerald-300 block mb-1">
+              🎓 Por que a temática foi adaptada para a sala de aula?
+            </span>
+            <p className="leading-relaxed">
+              No teste japonês original dos anos 2000, as regras alegavam que o pai não podia ficar com as filhas e a mãe não podia ficar com os meninos por motivos familiares antiquados, gerando estranheza social entre os estudantes. 
+              Nesta <strong>Adaptação da Gincana das Equipes</strong>, as restrições são baseadas em <strong>imparcialidade de olimpíada científica, código anti-espionagem de projeto e custódia de segurança</strong> — fazendo 100% de sentido social e preservando rigorosamente os mesmos <strong>17 passos da solução ótima</strong>!
+            </p>
+          </div>
+        )}
+
         {/* Objective */}
-        <div className="bg-blue-950/40 border border-blue-800/60 rounded-xl p-4 mb-5 text-sm text-blue-200">
+        <div className={`border rounded-xl p-4 mb-5 text-sm ${isSpace ? 'bg-cyan-950/40 border-cyan-800/60 text-cyan-200' : 'bg-blue-950/40 border-blue-800/60 text-blue-200'}`}>
           <strong className="text-white block mb-1">🎯 Objetivo Principal:</strong>
-          Transportar <strong>todas as 8 pessoas</strong> da margem esquerda para a margem direita do rio, utilizando a jangada de madeira sem infringir nenhuma das 5 restrições lógicas.
+          {isSpace ? (
+            <span>
+              Transportar com segurança <strong>todos os 8 tripulantes e espécimes</strong> do Módulo Alfa para a Nave de Evacuação através da cápsula pressurizada, sem violar os 5 protocolos de contenção e pilotagem.
+            </span>
+          ) : isTeams ? (
+            <span>
+              Transportar com segurança <strong>todos os 8 participantes</strong> (mentores, estudantes das duas equipes e a competidora detida) para a outra margem do rio, cumprindo as 5 regras de integridade e pilotagem.
+            </span>
+          ) : (
+            <span>
+              Transportar <strong>todas as 8 pessoas</strong> da margem esquerda para a margem direita do rio, utilizando a jangada de madeira sem infringir nenhuma das 5 restrições lógicas.
+            </span>
+          )}
         </div>
 
         {/* The 5 Official Rules */}
         <div className="space-y-3 mb-6">
           <h4 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-400" />
-            As 5 Regras Oficiais:
+            {isSpace
+              ? 'Os 5 Protocolos de Segurança Orbital:'
+              : isTeams
+              ? 'As 5 Regras de Integridade da Gincana:'
+              : 'As 5 Regras Oficiais:'}
           </h4>
 
           <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700 text-xs sm:text-sm">
             <span className="font-bold text-blue-400 mr-2">1. Capacidade:</span>
-            No máximo <strong>duas pessoas</strong> podem passar de cada vez na jangada.
+            No máximo <strong>duas pessoas</strong> podem passar de cada vez {isSpace ? 'na cápsula de vácuo' : 'na jangada'}.
           </div>
 
           <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700 text-xs sm:text-sm">
-            <span className="font-bold text-blue-400 mr-2">2. Pai e Filhas:</span>
-            O <strong>Pai não pode ficar com nenhuma das meninas</strong> sem a presença da Mãe (nem na margem, nem na jangada).
+            <span className="font-bold text-blue-400 mr-2">
+              {isSpace ? '2. Comandante Silva:' : isTeams ? '2. Mentor Carlos (Equipe Alfa):' : '2. Pai de Família:'}
+            </span>
+            {isSpace ? (
+              <span>
+                O <strong>Comandante Silva não pode ficar com os Cadetes</strong> sem a presença da Engenheira Elena (protocolo de tutela e segurança).
+              </span>
+            ) : isTeams ? (
+              <span>
+                O <strong>Mentor Carlos (Equipe Alfa)</strong> não pode ficar a sós com as alunas da <strong>Equipe Beta</strong> sem a presença da <strong>Mentora Beatriz</strong> <em>(regra de integridade e anti-espionagem do projeto da equipe rival)</em>.
+              </span>
+            ) : (
+              <span>
+                O <strong>Pai não pode ficar com nenhuma das meninas</strong> sem a presença da Mãe (nem na margem, nem na jangada).
+              </span>
+            )}
           </div>
 
           <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700 text-xs sm:text-sm">
-            <span className="font-bold text-blue-400 mr-2">3. Mãe e Filhos:</span>
-            A <strong>Mãe não pode ficar na presença dos meninos</strong> sem a presença do Pai (nem na margem, nem na jangada).
+            <span className="font-bold text-blue-400 mr-2">
+              {isSpace ? '3. Engenheira Elena:' : isTeams ? '3. Mentora Beatriz (Equipe Beta):' : '3. Mãe de Família:'}
+            </span>
+            {isSpace ? (
+              <span>
+                A <strong>Engenheira Elena não pode ficar com os Astrofísicos</strong> sem a presença do Comandante Silva (protocolo de liderança civil-militar).
+              </span>
+            ) : isTeams ? (
+              <span>
+                A <strong>Mentora Beatriz (Equipe Beta)</strong> não pode ficar a sós com os alunos da <strong>Equipe Alfa</strong> sem a presença do <strong>Mentor Carlos</strong> <em>(regra de integridade e supervisão justa)</em>.
+              </span>
+            ) : (
+              <span>
+                A <strong>Mãe não pode ficar na presença dos meninos</strong> sem a presença do Pai (nem na margem, nem na jangada).
+              </span>
+            )}
           </div>
 
           <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700 text-xs sm:text-sm">
-            <span className="font-bold text-blue-400 mr-2">4. Prisioneira Ruiva:</span>
-            A <strong>mulher de cabelo ruivo que está presa</strong> não pode ficar na presença de nenhum dos membros da família sem a presença do policial.
+            <span className="font-bold text-blue-400 mr-2">
+              {isSpace ? '4. Espécime Alienígena:' : isTeams ? '4. Infratora sob Custódia:' : '4. Prisioneira:'}
+            </span>
+            {isSpace ? (
+              <span>
+                O <strong>Espécime Alienígena</strong> não pode ficar com nenhum membro humano da tripulação sem a contenção ativa do <strong>Androide Unit-7</strong>.
+              </span>
+            ) : isTeams ? (
+              <span>
+                A <strong>competidora penalizada por tentativa de sabotagem</strong> não pode se aproximar de nenhum aluno ou mentor sem a presença e custódia do <strong>Fiscal de Prova Marcos</strong>.
+              </span>
+            ) : (
+              <span>
+                A <strong>mulher de cabelo ruivo que está presa</strong> não pode ficar na presença de nenhum dos membros da família sem a presença do policial.
+              </span>
+            )}
           </div>
 
           <div className="p-3 bg-slate-800/60 rounded-lg border border-slate-700 text-xs sm:text-sm">
-            <span className="font-bold text-blue-400 mr-2">5. Pilotos da Jangada:</span>
-            <strong>Só o policial e os pais podem conduzir a jangada.</strong> Filhos e prisioneira não sabem navegar sozinhos.
+            <span className="font-bold text-blue-400 mr-2">5. Habilitação de Condução:</span>
+            {isSpace ? (
+              <span>
+                <strong>Só o Comandante, a Engenheira e o Androide</strong> possuem credencial biométrica para operar a cápsula pressurizada.
+              </span>
+            ) : isTeams ? (
+              <span>
+                <strong>Só os dois Mentores e o Fiscal de Prova</strong> possuem habilitação náutica e brevê para pilotar a jangada. Os estudantes e a competidora detida não sabem navegar sozinhos.
+              </span>
+            ) : (
+              <span>
+                <strong>Só o policial e os pais podem conduzir a jangada.</strong> Filhos e prisioneira não sabem navegar sozinhos.
+              </span>
+            )}
           </div>
         </div>
 
@@ -116,7 +219,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             {ALL_CHARS.map((id) => {
-              const c = CHARACTERS[id];
+              const c = getCharacterDef(id, phase, subtheme);
               return (
                 <div
                   key={id}
@@ -133,7 +236,17 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
                         : 'bg-slate-700 text-slate-300'
                     }`}
                   >
-                    {c.isPilot ? '⛵ Condutor' : 'Passageiro'}
+                    {c.isPilot
+                      ? isSpace
+                        ? '🚀 Piloto'
+                        : '⛵ Condutor'
+                      : isSpace
+                      ? 'Tripulante'
+                      : isTeams
+                      ? id === 'prisoner'
+                        ? '⚠️ Penalizada'
+                        : 'Aluno(a)'
+                      : 'Passageiro'}
                   </span>
                 </div>
               );

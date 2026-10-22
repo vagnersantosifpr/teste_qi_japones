@@ -1,9 +1,12 @@
 import React from 'react';
-import { CharacterId } from '../types/game';
-import { CHARACTERS } from '../utils/characters';
+import { CharacterId, GamePhase, ClassicSubtheme } from '../types/game';
+import { getCharacterDef } from '../utils/characters';
+import { SpaceFigureSvg } from './SpaceFigureSvg';
 
 interface CharacterFigureProps {
   id: CharacterId;
+  phase?: GamePhase;
+  subtheme?: ClassicSubtheme;
   onClick?: () => void;
   onRaft?: boolean;
   disabled?: boolean;
@@ -15,6 +18,8 @@ interface CharacterFigureProps {
 
 export const CharacterFigure: React.FC<CharacterFigureProps> = ({
   id,
+  phase = 'classic',
+  subtheme = 'teams',
   onClick,
   onRaft = false,
   disabled = false,
@@ -23,7 +28,7 @@ export const CharacterFigure: React.FC<CharacterFigureProps> = ({
   isHinted = false,
   size = 'md',
 }) => {
-  const def = CHARACTERS[id];
+  const def = getCharacterDef(id, phase, subtheme);
 
   const scale = size === 'sm' ? 'scale-75' : size === 'lg' ? 'scale-110' : 'scale-100';
 
@@ -432,7 +437,7 @@ export const CharacterFigure: React.FC<CharacterFigureProps> = ({
           isHinted ? 'drop-shadow-[0_0_12px_rgba(16,185,129,0.9)] ring-2 ring-emerald-400 rounded-2xl' : ''
         }`}
       >
-        {renderSvgFigure()}
+        {phase === 'space' ? <SpaceFigureSvg id={id} /> : renderSvgFigure()}
 
         {/* Hover Clickable Ring */}
         {!disabled && (
@@ -445,18 +450,40 @@ export const CharacterFigure: React.FC<CharacterFigureProps> = ({
         <span
           className={`text-xs font-bold px-2 py-0.5 rounded shadow-sm text-white whitespace-nowrap ${
             def.category === 'parent'
-              ? 'bg-amber-800'
+              ? phase === 'space'
+                ? id === 'father'
+                  ? 'bg-blue-700 border border-blue-400/50'
+                  : 'bg-orange-600 border border-orange-400/50'
+                : 'bg-amber-800'
               : def.category === 'police'
-              ? 'bg-blue-800'
+              ? phase === 'space'
+                ? 'bg-emerald-700 border border-emerald-400/50'
+                : 'bg-blue-800'
               : def.category === 'prisoner'
-              ? 'bg-red-700'
+              ? phase === 'space'
+                ? 'bg-purple-800 border border-purple-400/50 animate-pulse'
+                : 'bg-red-700'
+              : phase === 'space'
+              ? 'bg-cyan-800 border border-cyan-400/50'
               : 'bg-emerald-700'
           }`}
         >
           {def.name}
         </span>
-        <span className="text-[10px] text-slate-700 font-medium whitespace-nowrap mt-0.5 bg-white/80 px-1 rounded">
-          {def.isPilot ? '⛵ Condutor' : 'Passageiro'}
+        <span className="text-[10px] text-slate-300 font-medium whitespace-nowrap mt-0.5 bg-slate-900/90 border border-slate-700 px-1.5 py-0.5 rounded">
+          {def.isPilot
+            ? phase === 'space'
+              ? '🚀 Piloto Habilitado'
+              : subtheme === 'teams'
+              ? '⛵ Condutor (Brevê)'
+              : '⛵ Condutor'
+            : phase === 'space'
+            ? 'Cientista / Tripulante'
+            : subtheme === 'teams'
+            ? id === 'prisoner'
+              ? '⚠️ Sob Custódia'
+              : '🎒 Pesquisador(a)'
+            : 'Passageiro'}
         </span>
       </div>
     </div>

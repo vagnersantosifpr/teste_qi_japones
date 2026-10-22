@@ -1,13 +1,15 @@
 import React from 'react';
 import { Lightbulb, X, Check, ArrowRight } from 'lucide-react';
 import { SolverStep } from '../utils/solver';
-import { CharacterId } from '../types/game';
-import { CHARACTERS } from '../utils/characters';
+import { CharacterId, GamePhase, ClassicSubtheme } from '../types/game';
+import { getCharacterDef } from '../utils/characters';
 
 interface HintModalProps {
   isOpen: boolean;
   onClose: () => void;
   hintStep: SolverStep | null;
+  phase?: GamePhase;
+  subtheme?: ClassicSubtheme;
   onApplyHint?: (passengers: CharacterId[]) => void;
 }
 
@@ -15,6 +17,8 @@ export const HintModal: React.FC<HintModalProps> = ({
   isOpen,
   onClose,
   hintStep,
+  phase = 'classic',
+  subtheme = 'teams',
   onApplyHint,
 }) => {
   if (!isOpen) return null;
@@ -59,7 +63,7 @@ export const HintModal: React.FC<HintModalProps> = ({
               </span>
               <div className="flex flex-wrap gap-2">
                 {hintStep.passengers.map((id) => {
-                  const c = CHARACTERS[id];
+                  const c = getCharacterDef(id, phase, subtheme);
                   return (
                     <div
                       key={id}

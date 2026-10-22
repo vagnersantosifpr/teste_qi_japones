@@ -1,4 +1,4 @@
-import { CharacterId, CharacterState, RuleViolation } from '../types/game';
+import { CharacterId, CharacterState, RuleViolation, ClassicSubtheme } from '../types/game';
 
 export interface GroupCheckResult {
   ruleViolations: RuleViolation[];
@@ -6,7 +6,9 @@ export interface GroupCheckResult {
 
 export function checkGroupViolations(
   members: CharacterId[],
-  locationName: 'Margem Esquerda' | 'Margem Direita' | 'Jangada'
+  locationName: string,
+  phase: 'classic' | 'space' = 'classic',
+  subtheme: ClassicSubtheme = 'teams'
 ): RuleViolation[] {
   const violations: RuleViolation[] = [];
   const set = new Set(members);
@@ -20,47 +22,109 @@ export function checkGroupViolations(
   const girlsPresent = (['girl1', 'girl2'] as CharacterId[]).filter((id) => set.has(id));
   const familyMembersPresent = (['father', 'mother', 'boy1', 'boy2', 'girl1', 'girl2'] as CharacterId[]).filter((id) => set.has(id));
 
-  // Regra 2: O Pai não pode ficar com nenhuma das meninas sem a presença da Mãe
+  // Regra 2: Mentor Alfa (Pai) e Alunas Beta (Meninas) sem Mentora Beta (Mãe)
   if (hasFather && girlsPresent.length > 0 && !hasMother) {
-    violations.push({
-      ruleNumber: 2,
-      title: 'Regra 2 Violada: Pai e Filhas',
-      message: `Na ${locationName}, o Pai não pode ficar com ${girlsPresent.length > 1 ? 'as meninas' : 'a menina'} sem a presença da Mãe!`,
-      location: locationName,
-      violatorIds: ['father'],
-      targetIds: girlsPresent,
-    });
+    if (phase === 'space') {
+      violations.push({
+        ruleNumber: 2,
+        title: 'Protocolo 2: Comandante e Cadetes',
+        message: `No(a) ${locationName}, o Comandante Silva não pode ficar com ${girlsPresent.length > 1 ? 'os Cadetes' : 'o Cadete'} sem a presença da Engenheira Elena (Protocolo de Segurança e Tutela)!`,
+        location: locationName as 'Margem Esquerda',
+        violatorIds: ['father'],
+        targetIds: girlsPresent,
+      });
+    } else if (subtheme === 'teams') {
+      violations.push({
+        ruleNumber: 2,
+        title: 'Código de Imparcialidade: Mentor Alfa e Alunas Beta',
+        message: `Na ${locationName}, o Mentor Carlos (Equipe Alfa) não pode ficar a sós com ${girlsPresent.length > 1 ? 'as alunas' : 'a aluna'} da Equipe Beta sem a presença da Mentora Beatriz (Protocolo de Ética e Sigilo da Olimpíada)!`,
+        location: locationName as 'Margem Esquerda',
+        violatorIds: ['father'],
+        targetIds: girlsPresent,
+      });
+    } else {
+      violations.push({
+        ruleNumber: 2,
+        title: 'Regra 2 Violada: Pai e Filhas',
+        message: `Na ${locationName}, o Pai não pode ficar com ${girlsPresent.length > 1 ? 'as meninas' : 'a menina'} sem a presença da Mãe!`,
+        location: locationName as 'Margem Esquerda',
+        violatorIds: ['father'],
+        targetIds: girlsPresent,
+      });
+    }
   }
 
-  // Regra 3: A Mãe não pode ficar na presença dos meninos sem a presença do Pai
+  // Regra 3: Mentora Beta (Mãe) e Alunos Alfa (Meninos) sem Mentor Alfa (Pai)
   if (hasMother && boysPresent.length > 0 && !hasFather) {
-    violations.push({
-      ruleNumber: 3,
-      title: 'Regra 3 Violada: Mãe e Filhos',
-      message: `Na ${locationName}, a Mãe não pode ficar com ${boysPresent.length > 1 ? 'os meninos' : 'o menino'} sem a presença do Pai!`,
-      location: locationName,
-      violatorIds: ['mother'],
-      targetIds: boysPresent,
-    });
+    if (phase === 'space') {
+      violations.push({
+        ruleNumber: 3,
+        title: 'Protocolo 3: Engenheira e Astrofísicos',
+        message: `No(a) ${locationName}, a Engenheira Elena não pode ficar com ${boysPresent.length > 1 ? 'os Astrofísicos' : 'o Astrofísico'} sem a presença do Comandante Silva (Protocolo de Comando Civil-Militar)!`,
+        location: locationName as 'Margem Esquerda',
+        violatorIds: ['mother'],
+        targetIds: boysPresent,
+      });
+    } else if (subtheme === 'teams') {
+      violations.push({
+        ruleNumber: 3,
+        title: 'Código de Imparcialidade: Mentora Beta e Alunos Alfa',
+        message: `Na ${locationName}, a Mentora Beatriz (Equipe Beta) não pode ficar a sós com ${boysPresent.length > 1 ? 'os alunos' : 'o aluno'} da Equipe Alfa sem a presença do Mentor Carlos (Protocolo de Ética e Sigilo da Olimpíada)!`,
+        location: locationName as 'Margem Esquerda',
+        violatorIds: ['mother'],
+        targetIds: boysPresent,
+      });
+    } else {
+      violations.push({
+        ruleNumber: 3,
+        title: 'Regra 3 Violada: Mãe e Filhos',
+        message: `Na ${locationName}, a Mãe não pode ficar com ${boysPresent.length > 1 ? 'os meninos' : 'o menino'} sem a presença do Pai!`,
+        location: locationName as 'Margem Esquerda',
+        violatorIds: ['mother'],
+        targetIds: boysPresent,
+      });
+    }
   }
 
-  // Regra 4: A mulher de cabelo ruivo que está presa não pode ficar na presença de nenhum membro da família sem o policial
+  // Regra 4: Infratora (Prisioneira) com Integrantes das Equipes sem Fiscal (Policial)
   if (hasPrisoner && familyMembersPresent.length > 0 && !hasPolice) {
-    violations.push({
-      ruleNumber: 4,
-      title: 'Regra 4 Violada: Prisioneira com a Família',
-      message: `Na ${locationName}, a prisioneira não pode ficar com nenhum membro da família sem a presença do policial!`,
-      location: locationName,
-      violatorIds: ['prisoner'],
-      targetIds: familyMembersPresent,
-    });
+    if (phase === 'space') {
+      violations.push({
+        ruleNumber: 4,
+        title: 'Alerta Biológico: Espécime Alienígena!',
+        message: `No(a) ${locationName}, o Espécime Alienígena não pode ficar perto de nenhum tripulante humano sem a contenção ativa do Androide Tático Unit-7 (Risco Crítico de Contaminação Biológica)!`,
+        location: locationName as 'Margem Esquerda',
+        violatorIds: ['prisoner'],
+        targetIds: familyMembersPresent,
+      });
+    } else if (subtheme === 'teams') {
+      violations.push({
+        ruleNumber: 4,
+        title: 'Protocolo de Custódia: Infratora Penalizada!',
+        message: `Na ${locationName}, a competidora penalizada por infração/sabotagem não pode ficar perto de nenhum estudante ou mentor sem a presença e custódia do Fiscal de Prova Marcos!`,
+        location: locationName as 'Margem Esquerda',
+        violatorIds: ['prisoner'],
+        targetIds: familyMembersPresent,
+      });
+    } else {
+      violations.push({
+        ruleNumber: 4,
+        title: 'Regra 4 Violada: Prisioneira com a Família',
+        message: `Na ${locationName}, a prisioneira não pode ficar com nenhum membro da família sem a presença do policial!`,
+        location: locationName as 'Margem Esquerda',
+        violatorIds: ['prisoner'],
+        targetIds: familyMembersPresent,
+      });
+    }
   }
 
   return violations;
 }
 
 export function evaluateAllRules(
-  characters: Record<CharacterId, CharacterState>
+  characters: Record<CharacterId, CharacterState>,
+  phase: 'classic' | 'space' = 'classic',
+  subtheme: ClassicSubtheme = 'teams'
 ): RuleViolation[] {
   const leftBankMembers: CharacterId[] = [];
   const rightBankMembers: CharacterId[] = [];
@@ -79,14 +143,18 @@ export function evaluateAllRules(
 
   const allViolations: RuleViolation[] = [];
 
-  // Checar margem esquerda
-  allViolations.push(...checkGroupViolations(leftBankMembers, 'Margem Esquerda'));
+  const leftName = phase === 'space' ? 'Módulo Alfa (Base)' : 'Margem Esquerda';
+  const rightName = phase === 'space' ? 'Nave de Evacuação' : 'Margem Direita';
+  const raftName = phase === 'space' ? 'Cápsula de Transporte' : 'Jangada';
 
-  // Checar margem direita
-  allViolations.push(...checkGroupViolations(rightBankMembers, 'Margem Direita'));
+  // Checar margem esquerda / Módulo Alfa
+  allViolations.push(...checkGroupViolations(leftBankMembers, leftName, phase, subtheme));
 
-  // Checar jangada
-  allViolations.push(...checkGroupViolations(raftMembers, 'Jangada'));
+  // Checar margem direita / Nave de Evacuação
+  allViolations.push(...checkGroupViolations(rightBankMembers, rightName, phase, subtheme));
+
+  // Checar jangada / Cápsula de Transporte
+  allViolations.push(...checkGroupViolations(raftMembers, raftName, phase, subtheme));
 
   return allViolations;
 }

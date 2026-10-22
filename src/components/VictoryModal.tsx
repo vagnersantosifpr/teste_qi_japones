@@ -15,7 +15,8 @@ import {
   Zap,
   Award,
 } from 'lucide-react';
-import { LogicStats } from '../types/game';
+import { LogicStats, GamePhase, ClassicSubtheme } from '../types/game';
+import { Rocket } from 'lucide-react';
 
 interface VictoryModalProps {
   isOpen: boolean;
@@ -23,6 +24,9 @@ interface VictoryModalProps {
   timerSeconds: number;
   studentName: string;
   stats: LogicStats;
+  phase?: GamePhase;
+  subtheme?: ClassicSubtheme;
+  onSelectNextPhase?: () => void;
   onStudentNameChange?: (name: string) => void;
   onRestart: () => void;
   onNewStudent?: () => void;
@@ -34,6 +38,9 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   timerSeconds,
   studentName,
   stats,
+  phase = 'classic',
+  subtheme = 'teams',
+  onSelectNextPhase,
   onStudentNameChange,
   onRestart,
   onNewStudent,
@@ -89,15 +96,22 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
       ? '⭐ CONSEGUIU DE 1ª TENTATIVA (SEM REINICIAR)'
       : `🔄 CONSEGUIU COM REINICIALIZAÇÃO (${stats.restartsCount} reinício(s) - Sucesso na Tentativa #${stats.attemptNumber})`;
 
+    const phaseTitle = phase === 'space' 
+      ? 'FASE 2: EVACUAÇÃO DA ESTAÇÃO ESPACIAL MARTE-01' 
+      : subtheme === 'teams'
+      ? 'FASE 1: GINCANA DAS EQUIPES (TRAVESSIA DO RIO)'
+      : 'FASE 1: TESTE DE QI JAPONÊS (TRAVESSIA DO RIO)';
+    const moveLabel = phase === 'space' ? 'Voos da Cápsula' : 'Travessias';
+
     const text =
-      `🎓 COMPROVANTE DE AVALIAÇÃO · TESTE DE QI JAPONÊS (TRAVESSIA DO RIO)\n` +
+      `🎓 COMPROVANTE DE AVALIAÇÃO · ${phaseTitle}\n` +
       `👤 Aluno(a): ${displayName}\n` +
       `🏅 Status de Resolução: ${restartStatusText}\n` +
       `🔢 Tentativa Vencedora: #${stats.attemptNumber} (${stats.restartsCount} reinicializações solicitadas)\n` +
       `⏱️ Tempo da Tentativa: ${timeFormatted}\n` +
-      `⛵ Travessias da Tentativa: ${movesCount} (Mínimo Ideal: 17)\n` +
+      `${phase === 'space' ? '🚀' : '⛵'} ${moveLabel} da Tentativa: ${movesCount} (Mínimo Ideal: 17)\n` +
       `🎯 Índice de Eficiência da Tentativa: ${stats.efficiencyIndex}%\n` +
-      `🌐 Índice de Eficiência Global da Sessão: ${stats.globalEfficiencyIndex}% (17 / ${stats.sessionTotalMoves} travessias acumuladas)\n` +
+      `🌐 Índice de Eficiência Global da Sessão: ${stats.globalEfficiencyIndex}% (17 / ${stats.sessionTotalMoves} movimentos acumulados)\n` +
       `💡 Pedidos de Dica: ${stats.hintsUsedCount} nesta tentativa (Total na sessão: ${stats.sessionTotalHints})\n` +
       `⚠️ Movimentos Errados/Desnecessários: ${stats.totalWrongOrUnnecessary} nesta tentativa (Total na sessão: ${stats.sessionTotalWrongOrUnnecessary})\n` +
       `🧠 Classificação Final de Lógica: ${stats.rankTitle} (${stats.logicScore}%)\n` +
@@ -312,8 +326,26 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           </p>
         </div>
 
-        {/* Action Buttons: Copy Report & Play Again & New Student */}
+        {/* Action Buttons: Next Phase & Copy Report & Play Again & New Student */}
         <div className="flex flex-col gap-2">
+          {onSelectNextPhase && (
+            <button
+              onClick={onSelectNextPhase}
+              className={`w-full py-3 rounded-xl font-bold text-sm shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-102 active:scale-98 ${
+                phase === 'classic'
+                  ? 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-cyan-500/30 ring-2 ring-cyan-400/50'
+                  : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white shadow-emerald-500/30 ring-2 ring-emerald-400/50'
+              }`}
+            >
+              <Rocket className="w-5 h-5 animate-pulse text-amber-300" />
+              <span>
+                {phase === 'classic'
+                  ? '🚀 Avançar para Fase 2: Estação Espacial Marte-01'
+                  : '🌊 Voltar para Fase 1: Rio Clássico'}
+              </span>
+            </button>
+          )}
+
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <button
               onClick={handleCopyReport}

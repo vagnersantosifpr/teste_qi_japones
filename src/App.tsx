@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { CharacterId, CharacterState, Bank, RuleViolation, GameSnapshot } from './types/game';
-import { INITIAL_CHARACTERS_STATE, CHARACTERS } from './utils/characters';
+import { CharacterId, CharacterState, Bank, RuleViolation, GameSnapshot, GamePhase, ClassicSubtheme } from './types/game';
+import { INITIAL_CHARACTERS_STATE, CHARACTERS, SPACE_CHARACTERS, getCharacterDef } from './utils/characters';
 import { evaluateAllRules, validateRaftCanSail, checkVictory } from './utils/rules';
 import { findNextOptimalStep, SolverStep } from './utils/solver';
 import { soundManager } from './utils/audio';
@@ -16,6 +16,8 @@ import { StatsModal } from './components/StatsModal';
 import { calculateLogicStats } from './utils/stats';
 
 export default function App() {
+  const [phase, setPhase] = useState<GamePhase>('classic');
+  const [classicSubtheme, setClassicSubtheme] = useState<ClassicSubtheme>('teams');
   const [started, setStarted] = useState(false);
   const [raftBank, setRaftBank] = useState<Bank>('left');
   const [characters, setCharacters] = useState<Record<CharacterId, CharacterState>>(
@@ -168,6 +170,23 @@ export default function App() {
     setHistory((prev) => prev.slice(0, prev.length - 1));
   };
 
+  // Select / Switch Game Phase (Maintains student name and session, resets board)
+  const handleSelectPhase = (newPhase: GamePhase) => {
+    soundManager.playClick();
+    setPhase(newPhase);
+    setRaftBank('left');
+    setCharacters(INITIAL_CHARACTERS_STATE);
+    setIsSailing(false);
+    setMovesCount(0);
+    setTimerSeconds(0);
+    setCurrentViolation(null);
+    setHistory([]);
+    setIsWon(false);
+    setHintsUsedCount(0);
+    setWrongAttemptsCount(0);
+    setUndosCount(0);
+  };
+
   // Character Click (Embark / Disembark)
   const handleCharacterClick = (id: CharacterId) => {
     if (isSailing) return;
@@ -176,10 +195,13 @@ export default function App() {
     setCurrentViolation(null);
 
     const charState = characters[id];
+    const charDef = getCharacterDef(id, phase, classicSubtheme);
+    const charName = charDef.name;
+    const craftName = phase === 'space' ? 'cápsula' : 'jangada';
 
     if (charState.onRaft) {
       // Disembark from raft to current raft bank (Removing someone)
-      pushHistory(`Desembarque de ${CHARACTERS[id].name}`);
+      pushHistory(`Desembarque de ${charName}`);
       soundManager.playStepOff();
 
       const newCharacters = {
@@ -205,21 +227,23 @@ export default function App() {
       }
 
       // Check raft passenger capacity (max 2)
-      const currentRaftCount = Object.values(characters).filter((c) => c.onRaft).length;
+      const currentRaftCount = Object.values(characters).filter((c: CharacterState) => c.onRaft).length;
       if (currentRaftCount >= 2) {
         soundManager.playViolation();
         setCurrentViolation({
           ruleNumber: 1,
-          title: 'Jangada Lotada',
-          message: 'No máximo duas pessoas podem estar na jangada ao mesmo tempo!',
-          location: 'Jangada',
+          title: phase === 'space' ? 'Cápsula Lotada' : 'Jangada Lotada',
+          message: phase === 'space'
+            ? 'Protocolo de Vácuo: No máximo dois tripulantes podem viajar na cápsula pressurizada ao mesmo tempo!'
+            : 'No máximo duas pessoas podem estar na jangada ao mesmo tempo!',
+          location: phase === 'space' ? 'Cápsula' : 'Jangada',
           violatorIds: [id],
           targetIds: [],
         });
         return;
       }
 
-      pushHistory(`Embarque de ${CHARACTERS[id].name}`);
+      pushHistory(`Embarque de ${charName} na ${craftName}`);
       soundManager.playBoard();
 
       const newCharacters = {
@@ -249,9 +273,13 @@ export default function App() {
       setWrongAttemptsCount((prev) => prev + 1);
       setCurrentViolation({
         ruleNumber: 5,
-        title: 'Jangada Vazia',
-        message: 'A jangada está vazia! Embarque pelo menos uma pessoa capaz de conduzir (Pai, Mãe ou Policial).',
-        location: 'Jangada',
+        title: phase === 'space' ? 'Cápsula Vazia' : 'Jangada Vazia',
+        message: phase === 'space'
+          ? 'A cápsula está vazia! Embarque pelo menos um tripulante autorizado (Comandante, Engenheira ou Androide Unit-7).'
+          : classicSubtheme === 'teams'
+          ? 'A jangada está vazia! Embarque pelo menos um condutor com brevê (Mentor Carlos, Mentora Beatriz ou Fiscal Marcos).'
+          : 'A jangada está vazia! Embarque pelo menos uma pessoa capaz de conduzir (Pai, Mãe ou Policial).',
+        location: phase === 'space' ? 'Cápsula' : 'Jangada',
         violatorIds: [],
         targetIds: [],
       });
@@ -267,9 +295,13 @@ export default function App() {
       setWrongAttemptsCount((prev) => prev + 1);
       setCurrentViolation({
         ruleNumber: 5,
-        title: 'Sem Condutor Válido',
-        message: 'Só o policial e os pais podem conduzir a jangada! Crianças e prisioneira não sabem navegar sozinhas.',
-        location: 'Jangada',
+        title: phase === 'space' ? 'Sem Piloto Autorizado' : classicSubtheme === 'teams' ? 'Sem Condutor Habilitado' : 'Sem Condutor Válido',
+        message: phase === 'space'
+          ? 'Apenas o Comandante Silva, Engenheira Elena e o Androide Unit-7 possuem biometria de voo!'
+          : classicSubtheme === 'teams'
+          ? 'Apenas os Mentores (Carlos e Beatriz) e o Fiscal Marcos possuem habilitação náutica e brevê para pilotar a jangada! Alunos e a competidora detida não sabem conduzir sozinhos.'
+          : 'Só o policial e os pais podem conduzir a jangada! Crianças e prisioneira não sabem navegar sozinhas.',
+        location: phase === 'space' ? 'Cápsula' : 'Jangada',
         violatorIds: raftPassengers,
         targetIds: [],
       });
@@ -277,7 +309,7 @@ export default function App() {
     }
 
     // 3. Check current state rules (shore left behind or raft itself)
-    const currentRules = evaluateAllRules(characters);
+    const currentRules = evaluateAllRules(characters, phase, classicSubtheme);
     if (currentRules.length > 0) {
       soundManager.playViolation();
       setWrongAttemptsCount((prev) => prev + 1);
@@ -297,7 +329,7 @@ export default function App() {
       }
     });
 
-    const arrivalViolations = evaluateAllRules(simulatedArrivalCharacters);
+    const arrivalViolations = evaluateAllRules(simulatedArrivalCharacters, phase, classicSubtheme);
     if (arrivalViolations.length > 0) {
       soundManager.playViolation();
       setWrongAttemptsCount((prev) => prev + 1);
@@ -307,7 +339,7 @@ export default function App() {
 
     // All rules passed! Clear any violation and execute the crossing
     setCurrentViolation(null);
-    pushHistory('Travessia do Rio');
+    pushHistory(phase === 'space' ? 'Voo de Trânsito Orbital' : 'Travessia do Rio');
     soundManager.playSail();
     setIsSailing(true);
 
@@ -378,7 +410,7 @@ export default function App() {
     setCurrentViolation(null);
   };
 
-  const raftPassengersCount = Object.values(characters).filter((c) => c.onRaft).length;
+  const raftPassengersCount = Object.values(characters).filter((c: CharacterState) => c.onRaft).length;
   const canSail = raftPassengersCount > 0 && !isSailing;
 
   const stats = calculateLogicStats(
@@ -404,6 +436,8 @@ export default function App() {
         isWon={isWon}
         studentName={studentName}
         stats={stats}
+        phase={phase}
+        onSelectPhase={handleSelectPhase}
         onUndo={handleUndo}
         onRestart={handleRestart}
         onToggleSound={handleToggleSound}
@@ -423,6 +457,10 @@ export default function App() {
         {!started ? (
           <StartScreen
             studentName={studentName}
+            phase={phase}
+            onPhaseChange={handleSelectPhase}
+            subtheme={classicSubtheme}
+            onSubthemeChange={setClassicSubtheme}
             onStudentNameChange={handleStudentNameChange}
             onStart={handleStartGame}
           />
@@ -431,6 +469,8 @@ export default function App() {
             characters={characters}
             raftBank={raftBank}
             isSailing={isSailing}
+            phase={phase}
+            subtheme={classicSubtheme}
             onCharacterClick={handleCharacterClick}
             onSail={handleSail}
             canSail={canSail}
@@ -450,12 +490,16 @@ export default function App() {
       {/* Detailed Rules & Logic Modal */}
       <RulesModal
         isOpen={showRulesModal}
+        phase={phase}
+        subtheme={classicSubtheme}
         onClose={() => setShowRulesModal(false)}
       />
 
       {/* Logic Hint Modal */}
       <HintModal
         isOpen={showHintModal}
+        phase={phase}
+        subtheme={classicSubtheme}
         onClose={() => setShowHintModal(false)}
         hintStep={hintStep}
         onApplyHint={handleApplyHint}
@@ -477,6 +521,9 @@ export default function App() {
         timerSeconds={timerSeconds}
         studentName={studentName}
         stats={stats}
+        phase={phase}
+        subtheme={classicSubtheme}
+        onSelectNextPhase={() => handleSelectPhase(phase === 'classic' ? 'space' : 'classic')}
         onStudentNameChange={handleStudentNameChange}
         onRestart={handleRestart}
         onNewStudent={handleNewStudent}
