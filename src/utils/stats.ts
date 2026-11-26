@@ -1,6 +1,10 @@
-import { LogicStats } from '../types/game';
+import { GamePhase, LogicStats } from '../types/game';
 
 export const MINIMUM_IDEAL_MOVES = 17;
+
+export function getIdealMovesForPhase(phase: GamePhase): number {
+  return phase === 'wolf' ? 7 : 17;
+}
 
 export function calculateLogicStats(
   movesCount: number,
@@ -11,18 +15,19 @@ export function calculateLogicStats(
   accumulatedPastMoves: number = 0,
   accumulatedPastHints: number = 0,
   accumulatedPastWrong: number = 0,
-  accumulatedPastUndos: number = 0
+  accumulatedPastUndos: number = 0,
+  idealMoves: number = MINIMUM_IDEAL_MOVES
 ): LogicStats {
-  const unnecessaryMovesCount = Math.max(0, movesCount - MINIMUM_IDEAL_MOVES);
+  const unnecessaryMovesCount = Math.max(0, movesCount - idealMoves);
   const totalWrongOrUnnecessary = wrongAttemptsCount + undosCount + unnecessaryMovesCount;
 
-  // Índice de eficiência da tentativa atual (17 / total de travessias)
+  // Índice de eficiência da tentativa atual (ideal / total de travessias)
   const efficiencyIndex =
     movesCount === 0
       ? 100
       : Math.min(
           100,
-          Math.round((MINIMUM_IDEAL_MOVES / Math.max(MINIMUM_IDEAL_MOVES, movesCount)) * 100)
+          Math.round((idealMoves / Math.max(idealMoves, movesCount)) * 100)
         );
 
   // Totais globais acumulados na sessão (todas as tentativas somadas)
@@ -30,20 +35,17 @@ export function calculateLogicStats(
   const sessionTotalHints = accumulatedPastHints + hintsUsedCount;
   const sessionTotalWrongAttempts = accumulatedPastWrong + wrongAttemptsCount;
   const sessionTotalUndos = accumulatedPastUndos + undosCount;
-  const sessionUnnecessaryMoves = Math.max(0, sessionTotalMoves - MINIMUM_IDEAL_MOVES);
+  const sessionUnnecessaryMoves = Math.max(0, sessionTotalMoves - idealMoves);
   const sessionTotalWrongOrUnnecessary =
     sessionTotalWrongAttempts + sessionTotalUndos + sessionUnnecessaryMoves;
 
   // Índice de Eficiência Global da Sessão:
-  // Calculado estritamente com base no total global de movimentos realizados e o mínimo ideal (17)
   const globalEfficiencyIndex =
     sessionTotalMoves === 0
       ? 100
       : Math.min(
           100,
-          Math.round(
-            (MINIMUM_IDEAL_MOVES / Math.max(MINIMUM_IDEAL_MOVES, sessionTotalMoves)) * 100
-          )
+          Math.round((idealMoves / Math.max(idealMoves, sessionTotalMoves)) * 100)
         );
 
   // Pontuação lógica da tentativa atual
@@ -51,7 +53,7 @@ export function calculateLogicStats(
   const errorPenalties = wrongAttemptsCount * 4 + undosCount * 2;
   const logicScore = Math.max(0, Math.min(100, efficiencyIndex - hintPenalties - errorPenalties));
 
-  // Pontuação lógica global (penaliza reinicializações e acúmulo de tentativas erradas)
+  // Pontuação lógica global
   const restartPenalty = restartsCount * 8;
   const globalHintPenalties = sessionTotalHints * 5;
   const globalErrorPenalties = sessionTotalWrongAttempts * 4 + sessionTotalUndos * 2;
@@ -68,7 +70,7 @@ export function calculateLogicStats(
   let rankTitle = 'Em Desenvolvimento';
   if (
     achievedWithoutRestart &&
-    movesCount === MINIMUM_IDEAL_MOVES &&
+    movesCount === idealMoves &&
     hintsUsedCount === 0 &&
     wrongAttemptsCount === 0
   ) {
@@ -86,6 +88,7 @@ export function calculateLogicStats(
   }
 
   return {
+    idealMoves,
     movesCount,
     hintsUsedCount,
     wrongAttemptsCount,

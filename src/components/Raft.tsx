@@ -28,6 +28,7 @@ export const Raft: React.FC<RaftProps> = ({
   subtheme = 'teams',
 }) => {
   const isSpace = phase === 'space';
+  const isWolf = phase === 'wolf';
 
   return (
     <div
@@ -35,9 +36,17 @@ export const Raft: React.FC<RaftProps> = ({
         isSailing ? 'pointer-events-none' : ''
       }`}
     >
-      {/* Sail & Mast or Sci-Fi Mag-Guideway */}
+      {/* Sail & Mast, Wooden Rowboat Oars, or Sci-Fi Mag-Guideway */}
       <div className="relative flex flex-col items-center">
-        {!isSpace ? (
+        {isWolf ? (
+          /* Rustic Countryside Boat Banner / Mast */
+          <div className="relative w-28 h-24 flex items-end justify-center">
+            <svg viewBox="0 0 110 90" className="w-full h-full drop-shadow-md">
+              <rect x="53" y="18" width="4" height="68" rx="2" fill="#78350f" />
+              <polygon points="57,20 92,30 57,42" fill="#f59e0b" stroke="#b45309" strokeWidth="1.2" />
+            </svg>
+          </div>
+        ) : !isSpace ? (
           /* White Triangular Sail */
           <div className="relative w-28 h-32 flex items-end">
             <svg viewBox="0 0 100 120" className="w-full h-full drop-shadow-md">
@@ -63,7 +72,6 @@ export const Raft: React.FC<RaftProps> = ({
           /* Sci-Fi Vacuum Transit Canopy / Plasma Arc */
           <div className="relative w-36 h-24 flex flex-col items-center justify-end">
             <svg viewBox="0 0 140 80" className="w-full h-full drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]">
-              {/* Pressurized Glass Dome */}
               <path
                 d="M15 75 Q70 5 125 75 Z"
                 fill="#0369a1"
@@ -79,7 +87,6 @@ export const Raft: React.FC<RaftProps> = ({
                 strokeDasharray="4 4"
                 opacity="0.8"
               />
-              {/* Top Beacon */}
               <circle cx="70" cy="20" r="4" fill="#38bdf8" />
               <circle cx="70" cy="20" r="2" fill="#ffffff" />
             </svg>
@@ -96,15 +103,17 @@ export const Raft: React.FC<RaftProps> = ({
               className={`h-28 w-44 flex flex-col items-center justify-center border-2 border-dashed rounded-xl text-xs px-2 text-center select-none backdrop-blur-xs ${
                 isSpace
                   ? 'border-cyan-500/60 bg-slate-950/70 text-cyan-200'
-                  : 'border-amber-600/60 bg-amber-950/20 text-amber-200'
+                  : 'border-amber-600/60 bg-amber-950/35 text-amber-100'
               }`}
             >
               <span className="font-semibold text-white">
-                {isSpace ? 'Cápsula Vazia' : 'Jangada Vazia'}
+                {isSpace ? 'Cápsula Vazia' : isWolf ? 'Barco Vazio' : 'Jangada Vazia'}
               </span>
-              <span className="text-[11px] opacity-80 mt-1">
+              <span className="text-[11px] opacity-85 mt-1">
                 {isSpace
                   ? 'Selecione os tripulantes na base para embarque (máx. 2)'
+                  : isWolf
+                  ? 'Clique na margem para embarcar (Fazendeiro + até 1 item)'
                   : 'Clique nas pessoas da margem para embarcar (máx. 2)'}
               </span>
             </div>
@@ -129,9 +138,28 @@ export const Raft: React.FC<RaftProps> = ({
           )}
         </div>
 
-        {/* Raft Deck: Wooden Logs OR Sci-Fi Mag-Pod Platform */}
+        {/* Hull: Wooden Rowboat (Wolf), Wooden Logs Raft (Classic), or Mag-Pod (Space) */}
         <div className="relative w-56 -mt-2">
-          {!isSpace ? (
+          {isWolf ? (
+            <svg viewBox="0 0 220 54" className="w-full h-auto drop-shadow-xl">
+              <ellipse cx="110" cy="46" rx="100" ry="7" fill="rgba(15, 23, 42, 0.35)" />
+              <path
+                d="M12 16 L208 16 L184 42 Q110 48 36 42 Z"
+                fill="#92400e"
+                stroke="#451a03"
+                strokeWidth="2"
+              />
+              <path
+                d="M16 16 L204 16 L196 24 L24 24 Z"
+                fill="#b45309"
+                stroke="#78350f"
+                strokeWidth="1.2"
+              />
+              <rect x="64" y="18" width="22" height="5" rx="2" fill="#d97706" />
+              <rect x="134" y="18" width="22" height="5" rx="2" fill="#d97706" />
+              <line x1="36" y1="32" x2="184" y2="32" stroke="#78350f" strokeWidth="1.5" />
+            </svg>
+          ) : !isSpace ? (
             <svg viewBox="0 0 220 50" className="w-full h-auto drop-shadow-xl">
               <ellipse cx="110" cy="42" rx="105" ry="7" fill="rgba(15, 23, 42, 0.4)" />
               <rect x="10" y="8" width="200" height="12" rx="6" fill="#854d0e" stroke="#713f12" strokeWidth="1.5" />
@@ -144,19 +172,15 @@ export const Raft: React.FC<RaftProps> = ({
             </svg>
           ) : (
             <svg viewBox="0 0 220 50" className="w-full h-auto drop-shadow-[0_0_20px_rgba(56,189,248,0.7)]">
-              {/* Maglev Shadow */}
               <ellipse cx="110" cy="44" rx="100" ry="6" fill="rgba(6, 182, 212, 0.3)" />
-              {/* High-Tech Chassis */}
               <path
                 d="M15 20 L40 6 L180 6 L205 20 L195 38 L25 38 Z"
                 fill="#0f172a"
                 stroke="#38bdf8"
                 strokeWidth="1.8"
               />
-              {/* Floor Grip Plates */}
               <rect x="35" y="10" width="150" height="12" rx="2" fill="#1e293b" />
               <line x1="45" y1="16" x2="175" y2="16" stroke="#06b6d4" strokeWidth="2" strokeDasharray="6 3" />
-              {/* Ion Thrusters (Active Glow) */}
               <rect x="8" y="22" width="14" height="10" rx="2" fill="#1e293b" stroke="#38bdf8" strokeWidth="1" />
               <rect x="198" y="22" width="14" height="10" rx="2" fill="#1e293b" stroke="#38bdf8" strokeWidth="1" />
               {isSailing && (
@@ -173,15 +197,21 @@ export const Raft: React.FC<RaftProps> = ({
             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center">
               <button
                 onClick={onSailClick}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold shadow-lg transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95 ring-2 ring-white/60 animate-pulse ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold shadow-lg transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95 ring-2 ring-white/60 ${
                   isSpace
                     ? 'bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white'
                     : 'bg-red-600 hover:bg-red-500 text-white'
                 }`}
-                title={isSpace ? 'Ativar eclusa e decolar cápsula' : 'Clique para tentar atravessar o rio'}
+                title={
+                  isSpace
+                    ? 'Ativar eclusa e decolar cápsula'
+                    : isWolf
+                    ? 'Clique para remar o barco até a outra margem'
+                    : 'Clique para tentar atravessar o rio'
+                }
               >
                 {isSpace ? <Rocket className="w-3.5 h-3.5" /> : <Anchor className="w-3.5 h-3.5" />}
-                <span>{isSpace ? '🚀 Decolar Cápsula' : '⛵ Atravessar'}</span>
+                <span>{isSpace ? 'Decolar Cápsula' : isWolf ? 'Remar Barco' : 'Atravessar'}</span>
               </button>
             </div>
           )}

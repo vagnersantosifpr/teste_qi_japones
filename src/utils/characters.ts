@@ -1,7 +1,73 @@
-import { CharacterDef, CharacterId, ClassicSubtheme } from '../types/game';
+import {
+  CharacterDef,
+  CharacterId,
+  ClassicCharacterId,
+  WolfCharacterId,
+  ClassicSubtheme,
+  GamePhase,
+  CharacterStateMap,
+} from '../types/game';
 
-// Nova Adaptação Pedagógica: Gincana de Ciências e Robótica das Equipes (Padrão e Recomendado)
-export const TEAM_CHARACTERS: Record<CharacterId, CharacterDef> = {
+export const CLASSIC_CHAR_IDS: ClassicCharacterId[] = [
+  'father',
+  'mother',
+  'boy1',
+  'boy2',
+  'girl1',
+  'girl2',
+  'police',
+  'prisoner',
+];
+
+export const WOLF_CHAR_IDS: WolfCharacterId[] = ['farmer', 'wolf', 'lamb', 'cabbage'];
+
+export function getPhaseCharacterIds(phase: GamePhase): CharacterId[] {
+  if (phase === 'wolf') return WOLF_CHAR_IDS;
+  return CLASSIC_CHAR_IDS;
+}
+
+// Fase 1 (Inicial): Lobo, Cordeiro e Alface
+export const WOLF_CHARACTERS: Record<WolfCharacterId, CharacterDef> = {
+  farmer: {
+    id: 'farmer',
+    name: 'Fazendeiro',
+    role: 'Condutor do Barco',
+    isPilot: true,
+    category: 'farmer',
+    description: 'Único que sabe remar o barco. Pode atravessar sozinho ou transportando 1 item por viagem.',
+    accentColor: '#b45309',
+  },
+  wolf: {
+    id: 'wolf',
+    name: 'Lobo',
+    role: 'Predador',
+    isPilot: false,
+    category: 'wolf',
+    description: 'Não sabe remar. Não pode ficar na margem com o Cordeiro sem a presença do Fazendeiro.',
+    accentColor: '#475569',
+  },
+  lamb: {
+    id: 'lamb',
+    name: 'Cordeiro',
+    role: 'Animal Herbívoro',
+    isPilot: false,
+    category: 'lamb',
+    description: 'Não sabe remar. Não pode ficar sem o Fazendeiro nem com o Lobo, nem com a Alface.',
+    accentColor: '#d97706',
+  },
+  cabbage: {
+    id: 'cabbage',
+    name: 'Alface',
+    role: 'Hortaliça Fresca',
+    isPilot: false,
+    category: 'cabbage',
+    description: 'Não sabe remar. Não pode ficar na margem com o Cordeiro sem a presença do Fazendeiro.',
+    accentColor: '#16a34a',
+  },
+};
+
+// Fase 2 (Adaptação Pedagógica): Gincana de Ciências e Robótica das Equipes (Padrão e Recomendado)
+export const TEAM_CHARACTERS: Record<ClassicCharacterId, CharacterDef> = {
   father: {
     id: 'father',
     name: 'Mentor Carlos',
@@ -9,7 +75,7 @@ export const TEAM_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: true,
     category: 'parent',
     description: 'Possui brevê de piloto. Não pode ficar com alunas da Equipe Beta sem a Mentora Beatriz (Protocolo de Ética e Imparcialidade).',
-    accentColor: '#92400e', // Amber-800
+    accentColor: '#92400e',
   },
   mother: {
     id: 'mother',
@@ -18,7 +84,7 @@ export const TEAM_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: true,
     category: 'parent',
     description: 'Possui brevê de piloto. Não pode ficar com alunos da Equipe Alfa sem o Mentor Carlos (Protocolo de Ética e Imparcialidade).',
-    accentColor: '#7e22ce', // Purple-700
+    accentColor: '#7e22ce',
   },
   boy1: {
     id: 'boy1',
@@ -27,7 +93,7 @@ export const TEAM_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: false,
     category: 'child',
     description: 'Não conduz o barco. Não pode ficar a sós com a Mentora Beta sem o Mentor Carlos presente.',
-    accentColor: '#15803d', // Green-700
+    accentColor: '#15803d',
   },
   boy2: {
     id: 'boy2',
@@ -36,7 +102,7 @@ export const TEAM_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: false,
     category: 'child',
     description: 'Não conduz o barco. Não pode ficar a sós com a Mentora Beta sem o Mentor Carlos presente.',
-    accentColor: '#16a34a', // Green-600
+    accentColor: '#16a34a',
   },
   girl1: {
     id: 'girl1',
@@ -45,7 +111,7 @@ export const TEAM_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: false,
     category: 'child',
     description: 'Não conduz o barco. Não pode ficar a sós com o Mentor Carlos sem a Mentora Beatriz presente.',
-    accentColor: '#0284c7', // Sky-600
+    accentColor: '#0284c7',
   },
   girl2: {
     id: 'girl2',
@@ -54,7 +120,7 @@ export const TEAM_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: false,
     category: 'child',
     description: 'Não conduz o barco. Não pode ficar a sós com o Mentor Carlos sem a Mentora Beatriz presente.',
-    accentColor: '#0369a1', // Sky-700
+    accentColor: '#0369a1',
   },
   police: {
     id: 'police',
@@ -63,7 +129,7 @@ export const TEAM_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: true,
     category: 'police',
     description: 'Possui brevê de piloto. Deve manter a competidora penalizada sob custódia longe de todos os alunos.',
-    accentColor: '#1e40af', // Blue-800
+    accentColor: '#1e40af',
   },
   prisoner: {
     id: 'prisoner',
@@ -72,12 +138,12 @@ export const TEAM_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: false,
     category: 'prisoner',
     description: 'Não conduz o barco. Não pode ficar com nenhum estudante ou mentor sem a presença do Fiscal de Prova.',
-    accentColor: '#dc2626', // Red-600
+    accentColor: '#dc2626',
   },
 };
 
-// Histórico Original do Teste Japonês de 2009 (Opcional para comparação pedagógica)
-export const ORIGINAL_FAMILY_CHARACTERS: Record<CharacterId, CharacterDef> = {
+// Histórico Original do Teste de QI Japonês de 2009 (Opcional para comparação pedagógica)
+export const ORIGINAL_FAMILY_CHARACTERS: Record<ClassicCharacterId, CharacterDef> = {
   father: {
     id: 'father',
     name: 'Pai',
@@ -152,10 +218,9 @@ export const ORIGINAL_FAMILY_CHARACTERS: Record<CharacterId, CharacterDef> = {
   },
 };
 
-// Por padrão, CHARACTERS aponta para a nova adaptação pedagógica
-export const CHARACTERS: Record<CharacterId, CharacterDef> = TEAM_CHARACTERS;
+export const CHARACTERS: Record<ClassicCharacterId, CharacterDef> = TEAM_CHARACTERS;
 
-export const SPACE_CHARACTERS: Record<CharacterId, CharacterDef> = {
+export const SPACE_CHARACTERS: Record<ClassicCharacterId, CharacterDef> = {
   father: {
     id: 'father',
     name: 'Comandante Silva',
@@ -163,7 +228,7 @@ export const SPACE_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: true,
     category: 'parent',
     description: 'Possui credencial de piloto. Não pode ficar com nenhum Cadete sem a Engenheira.',
-    accentColor: '#2563eb', // Blue-600
+    accentColor: '#2563eb',
   },
   mother: {
     id: 'mother',
@@ -172,7 +237,7 @@ export const SPACE_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: true,
     category: 'parent',
     description: 'Possui credencial de piloto. Não pode ficar com nenhum Astrofísico sem o Comandante.',
-    accentColor: '#ea580c', // Orange-600
+    accentColor: '#ea580c',
   },
   boy1: {
     id: 'boy1',
@@ -181,7 +246,7 @@ export const SPACE_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: false,
     category: 'child',
     description: 'Não pilota a cápsula. Não pode ficar com a Engenheira sem o Comandante.',
-    accentColor: '#06b6d4', // Cyan-500
+    accentColor: '#06b6d4',
   },
   boy2: {
     id: 'boy2',
@@ -190,7 +255,7 @@ export const SPACE_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: false,
     category: 'child',
     description: 'Não pilota a cápsula. Não pode ficar com a Engenheira sem o Comandante.',
-    accentColor: '#0891b2', // Cyan-600
+    accentColor: '#0891b2',
   },
   girl1: {
     id: 'girl1',
@@ -199,7 +264,7 @@ export const SPACE_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: false,
     category: 'child',
     description: 'Não pilota a cápsula. Não pode ficar com o Comandante sem a Engenheira.',
-    accentColor: '#eab308', // Yellow-500
+    accentColor: '#eab308',
   },
   girl2: {
     id: 'girl2',
@@ -208,7 +273,7 @@ export const SPACE_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: false,
     category: 'child',
     description: 'Não pilota a cápsula. Não pode ficar com o Comandante sem a Engenheira.',
-    accentColor: '#ca8a04', // Yellow-600
+    accentColor: '#ca8a04',
   },
   police: {
     id: 'police',
@@ -217,7 +282,7 @@ export const SPACE_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: true,
     category: 'police',
     description: 'Pilota a cápsula. Deve conter o Espécime Alienígena perto de qualquer humano.',
-    accentColor: '#10b981', // Emerald-500
+    accentColor: '#10b981',
   },
   prisoner: {
     id: 'prisoner',
@@ -226,27 +291,31 @@ export const SPACE_CHARACTERS: Record<CharacterId, CharacterDef> = {
     isPilot: false,
     category: 'prisoner',
     description: 'Não pilota. Nunca pode ficar com nenhum membro humano da tripulação sem o Androide.',
-    accentColor: '#a855f7', // Purple-500
+    accentColor: '#a855f7',
   },
 };
 
 export function getCharacterDef(
   id: CharacterId,
-  phase: 'classic' | 'space' = 'classic',
+  phase: GamePhase = 'classic',
   subtheme: ClassicSubtheme = 'teams'
 ): CharacterDef {
-  if (phase === 'space') return SPACE_CHARACTERS[id];
-  if (subtheme === 'family') return ORIGINAL_FAMILY_CHARACTERS[id];
-  return TEAM_CHARACTERS[id];
+  if (phase === 'wolf') {
+    return WOLF_CHARACTERS[id as WolfCharacterId] ?? WOLF_CHARACTERS.farmer;
+  }
+  const classicId = id as ClassicCharacterId;
+  if (phase === 'space') return SPACE_CHARACTERS[classicId] ?? SPACE_CHARACTERS.father;
+  if (subtheme === 'family') return ORIGINAL_FAMILY_CHARACTERS[classicId] ?? ORIGINAL_FAMILY_CHARACTERS.father;
+  return TEAM_CHARACTERS[classicId] ?? TEAM_CHARACTERS.father;
 }
 
-export const INITIAL_CHARACTERS_STATE: Record<CharacterId, { bank: 'left' | 'right'; onRaft: boolean }> = {
-  father: { bank: 'left', onRaft: false },
-  mother: { bank: 'left', onRaft: false },
-  boy1: { bank: 'left', onRaft: false },
-  boy2: { bank: 'left', onRaft: false },
-  girl1: { bank: 'left', onRaft: false },
-  girl2: { bank: 'left', onRaft: false },
-  police: { bank: 'left', onRaft: false },
-  prisoner: { bank: 'left', onRaft: false },
-};
+export function getInitialCharactersState(phase: GamePhase): CharacterStateMap {
+  const ids = getPhaseCharacterIds(phase);
+  const state: CharacterStateMap = {};
+  ids.forEach((id) => {
+    state[id] = { bank: 'left', onRaft: false };
+  });
+  return state;
+}
+
+export const INITIAL_CHARACTERS_STATE: CharacterStateMap = getInitialCharactersState('classic');

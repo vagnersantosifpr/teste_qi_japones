@@ -1,7 +1,8 @@
 import React from 'react';
-import { CharacterId, GamePhase, ClassicSubtheme } from '../types/game';
+import { CharacterId, GamePhase, ClassicSubtheme, WolfCharacterId } from '../types/game';
 import { getCharacterDef } from '../utils/characters';
 import { SpaceFigureSvg } from './SpaceFigureSvg';
+import { WolfFigureSvg } from './WolfFigureSvg';
 
 interface CharacterFigureProps {
   id: CharacterId;
@@ -437,7 +438,13 @@ export const CharacterFigure: React.FC<CharacterFigureProps> = ({
           isHinted ? 'drop-shadow-[0_0_12px_rgba(16,185,129,0.9)] ring-2 ring-emerald-400 rounded-2xl' : ''
         }`}
       >
-        {phase === 'space' ? <SpaceFigureSvg id={id} /> : renderSvgFigure()}
+        {phase === 'space' ? (
+          <SpaceFigureSvg id={id} />
+        ) : phase === 'wolf' ? (
+          <WolfFigureSvg id={id as WolfCharacterId} />
+        ) : (
+          renderSvgFigure()
+        )}
 
         {/* Hover Clickable Ring */}
         {!disabled && (
@@ -449,7 +456,15 @@ export const CharacterFigure: React.FC<CharacterFigureProps> = ({
       <div className="mt-1 flex flex-col items-center">
         <span
           className={`text-xs font-bold px-2 py-0.5 rounded shadow-sm text-white whitespace-nowrap ${
-            def.category === 'parent'
+            def.category === 'farmer'
+              ? 'bg-amber-700 border border-amber-400/40'
+              : def.category === 'wolf'
+              ? 'bg-slate-700 border border-slate-500/50'
+              : def.category === 'lamb'
+              ? 'bg-amber-600 border border-amber-300/40'
+              : def.category === 'cabbage'
+              ? 'bg-emerald-700 border border-emerald-400/40'
+              : def.category === 'parent'
               ? phase === 'space'
                 ? id === 'father'
                   ? 'bg-blue-700 border border-blue-400/50'
@@ -471,7 +486,15 @@ export const CharacterFigure: React.FC<CharacterFigureProps> = ({
           {def.name}
         </span>
         <span className="text-[10px] text-slate-300 font-medium whitespace-nowrap mt-0.5 bg-slate-900/90 border border-slate-700 px-1.5 py-0.5 rounded">
-          {def.isPilot
+          {phase === 'wolf'
+            ? def.isPilot
+              ? '⛵ Remador'
+              : id === 'wolf'
+              ? '🐺 Predador'
+              : id === 'lamb'
+              ? '🐑 Herbívoro'
+              : '🥬 Hortaliça'
+            : def.isPilot
             ? phase === 'space'
               ? '🚀 Piloto Habilitado'
               : subtheme === 'teams'

@@ -1,5 +1,6 @@
-import { CharacterId, Bank } from '../types/game';
+import { CharacterId, Bank, GamePhase, ClassicSubtheme } from '../types/game';
 import { checkGroupViolations } from './rules';
+import { getPhaseCharacterIds, getCharacterDef } from './characters';
 
 export interface SolverStep {
   passengers: CharacterId[];
@@ -8,43 +9,48 @@ export interface SolverStep {
   explanation: string;
 }
 
-const ALL_CHARACTERS: CharacterId[] = [
-  'father',
-  'mother',
-  'boy1',
-  'boy2',
-  'girl1',
-  'girl2',
-  'police',
-  'prisoner',
-];
-
-const PILOTS: Set<CharacterId> = new Set(['father', 'mother', 'police']);
-
-function isValidShore(members: CharacterId[]): boolean {
-  return checkGroupViolations(members, 'Margem Esquerda').length === 0;
-}
-
-function isValidRaft(passengers: CharacterId[]): boolean {
-  if (passengers.length < 1 || passengers.length > 2) return false;
-  const hasPilot = passengers.some((p) => PILOTS.has(p));
-  if (!hasPilot) return false;
-  return checkGroupViolations(passengers, 'Jangada').length === 0;
-}
-
-function stateToKey(raftBank: Bank, leftMembers: Set<CharacterId>): string {
-  const sortedLeft = ALL_CHARACTERS.filter((c) => leftMembers.has(c)).join(',');
-  return `${raftBank}|${sortedLeft}`;
-}
-
 export function findNextOptimalStep(
   currentRaftBank: Bank,
   currentLeftBank: CharacterId[],
-  currentRightBank: CharacterId[]
+  _currentRightBank: CharacterId[],
+  phase: GamePhase = 'classic',
+  subtheme: ClassicSubtheme = 'teams'
 ): SolverStep | null {
+  const allCharacters = getPhaseCharacterIds(phase);
+  const pilots: Set<CharacterId> =
+    phase === 'wolf' ? new Set(['farmer']) : new Set(['father', 'mother', 'police']);
+
+  const isValidShore = (members: CharacterId[]): boolean => {
+    return checkGroupViolations(members, 'Margem Esquerda', phase, subtheme).length === 0;
+  };
+
+  const isValidRaft = (passengers: CharacterId[]): boolean => {
+    if (passengers.length < 1 || passengers.length > 2) return false;
+    const hasPilot = passengers.some((p) => pilots.has(p));
+    if (!hasPilot) return false;
+    return checkGroupViolations(passengers, 'Jangada', phase, subtheme).length === 0;
+  };
+
+  const stateToKey = (raftBank: Bank, leftMembers: Set<CharacterId>): string => {
+    const sortedLeft = allCharacters.filter((c) => leftMembers.has(c)).join(',');
+    return `${raftBank}|${sortedLeft}`;
+  };
+
+  const createExplanation = (passengers: CharacterId[], to: Bank): string => {
+    const names = passengers.map((p) => getCharacterDef(p, phase, subtheme).name).join(' e ');
+    const dest =
+      phase === 'space'
+        ? to === 'right'
+          ? 'Nave de Evacuação'
+          : 'Módulo Alfa'
+        : to === 'right'
+        ? 'margem direita'
+        : 'margem esquerda';
+    return `Transporte ${names} para a ${dest}.`;
+  };
+
   const currentLeftSet = new Set(currentLeftBank);
 
-  // BFS Queue
   interface BFSNode {
     raftBank: Bank;
     leftSet: Set<CharacterId>;
@@ -74,9 +80,10 @@ export function findNextOptimalStep(
 
     const fromBank = current.raftBank;
     const toBank: Bank = fromBank === 'left' ? 'right' : 'left';
-    const currentBankMembers = fromBank === 'left'
-      ? ALL_CHARACTERS.filter((c) => current.leftSet.has(c))
-      : ALL_CHARACTERS.filter((c) => !current.leftSet.has(c));
+    const currentBankMembers =
+      fromBank === 'left'
+        ? allCharacters.filter((c) => current.leftSet.has(c))
+        : allCharacters.filter((c) => !current.leftSet.has(c));
 
     // Try all 1-person moves
     for (let i = 0; i < currentBankMembers.length; i++) {
@@ -91,8 +98,8 @@ export function findNextOptimalStep(
           nextLeftSet.add(p1);
         }
 
-        const nextLeftList = ALL_CHARACTERS.filter((c) => nextLeftSet.has(c));
-        const nextRightList = ALL_CHARACTERS.filter((c) => !nextLeftSet.has(c));
+        const nextLeftList = allCharacters.filter((c) => nextLeftSet.has(c));
+        const nextRightList = allCharacters.filter((c) => !nextLeftSet.has(c));
 
         if (isValidShore(nextLeftList) && isValidShore(nextRightList)) {
           const nextKey = stateToKey(toBank, nextLeftSet);
@@ -102,7 +109,7 @@ export function findNextOptimalStep(
               passengers,
               fromBank,
               toBank,
-              explanation: createExplanation(passengers, fromBank, toBank),
+              explanation: createExplanation(passengers, toBank),
             };
             queue.push({
               raftBank: toBank,
@@ -128,8 +135,8 @@ export function findNextOptimalStep(
             nextLeftSet.add(p2);
           }
 
-          const nextLeftList = ALL_CHARACTERS.filter((c) => nextLeftSet.has(c));
-          const nextRightList = ALL_CHARACTERS.filter((c) => !nextLeftSet.has(c));
+          const nextLeftList = allCharacters.filter((c) => nextLeftSet.has(c));
+          const nextRightList = allCharacters.filter((c) => !nextLeftSet.has(c));
 
           if (isValidShore(nextLeftList) && isValidShore(nextRightList)) {
             const nextKey = stateToKey(toBank, nextLeftSet);
@@ -139,7 +146,7 @@ export function findNextOptimalStep(
                 passengers: passengers2,
                 fromBank,
                 toBank,
-                explanation: createExplanation(passengers2, fromBank, toBank),
+                explanation: createExplanation(passengers2, toBank),
               };
               queue.push({
                 raftBank: toBank,
@@ -154,21 +161,4 @@ export function findNextOptimalStep(
   }
 
   return null;
-}
-
-const NAME_MAP: Record<CharacterId, string> = {
-  father: 'o Pai',
-  mother: 'a Mãe',
-  boy1: 'o Menino 1',
-  boy2: 'o Menino 2',
-  girl1: 'a Menina 1',
-  girl2: 'a Menina 2',
-  police: 'o Policial',
-  prisoner: 'a Prisioneira',
-};
-
-function createExplanation(passengers: CharacterId[], from: Bank, to: Bank): string {
-  const names = passengers.map((p) => NAME_MAP[p]).join(' e ');
-  const dest = to === 'right' ? 'margem direita' : 'margem esquerda';
-  return `Transporte ${names} para a ${dest}.`;
 }

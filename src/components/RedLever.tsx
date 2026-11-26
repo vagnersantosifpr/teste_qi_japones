@@ -19,9 +19,17 @@ export const RedLever: React.FC<RedLeverProps> = ({
   phase = 'classic',
 }) => {
   const isSpace = phase === 'space';
+  const isWolf = phase === 'wolf';
   const isReadyToSail = isActiveBank && canSail && !disabled;
 
-  const sideLabel = side === 'left' ? (isSpace ? 'Módulo Alfa' : 'Margem Esquerda') : (isSpace ? 'Nave de Evacuação' : 'Margem Direita');
+  const sideLabel =
+    side === 'left'
+      ? isSpace
+        ? 'Módulo Alfa'
+        : 'Margem Esquerda'
+      : isSpace
+      ? 'Nave de Evacuação'
+      : 'Margem Direita';
 
   return (
     <div
@@ -43,11 +51,15 @@ export const RedLever: React.FC<RedLeverProps> = ({
       <div className="absolute -top-10 left-1/2 -translate-x-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-700 text-white text-xs py-1 px-2.5 rounded-md shadow-lg whitespace-nowrap z-30">
         {isReadyToSail
           ? isSpace
-            ? '🚀 Decolar Cápsula (Clique aqui!)'
-            : '⛵ Navegar Jangada (Clique aqui!)'
+            ? 'Decolar Cápsula (Clique aqui!)'
+            : isWolf
+            ? 'Remar Barco (Clique aqui!)'
+            : 'Navegar Jangada (Clique aqui!)'
           : isActiveBank
           ? isSpace
             ? 'Terminal Eclusa (Embarque piloto)'
+            : isWolf
+            ? 'Ponto Vermelho (Embarque Fazendeiro)'
             : 'Ponto Vermelho (Embarque condutor)'
           : isSpace
           ? 'Terminal Eclusa'

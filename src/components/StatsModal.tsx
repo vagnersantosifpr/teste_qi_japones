@@ -131,7 +131,9 @@ export const StatsModal: React.FC<StatsModalProps> = ({
               {stats.efficiencyIndex}%
             </div>
             <span className="text-[10px] text-slate-400">
-              {stats.restartsCount > 0 ? `Global: ${stats.globalEfficiencyIndex}%` : 'Ideal: 17 travessias'}
+              {stats.restartsCount > 0
+                ? `Global: ${stats.globalEfficiencyIndex}%`
+                : `Ideal: ${stats.idealMoves} travessias`}
             </span>
           </div>
         </div>
@@ -140,35 +142,35 @@ export const StatsModal: React.FC<StatsModalProps> = ({
         <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 space-y-2 mb-4 text-xs">
           <div className="text-slate-300 font-bold flex items-center justify-between pb-1.5 border-b border-slate-800">
             <span>Detalhamento dos Movimentos:</span>
-            <span className="text-slate-400 font-mono">
+            <span className="text-slate-400 font-mono tabular-nums">
               Tentativa: {stats.movesCount} | Sessão Total: {stats.sessionTotalMoves}
             </span>
           </div>
 
           <div className="flex items-center justify-between text-slate-400">
             <span>Tentativas de travessia bloqueadas (regras):</span>
-            <span className="font-mono text-rose-400 font-semibold">
+            <span className="font-mono tabular-nums text-rose-400 font-semibold">
               {stats.wrongAttemptsCount} {stats.restartsCount > 0 && `(Total: ${stats.sessionTotalWrongAttempts})`}
             </span>
           </div>
 
           <div className="flex items-center justify-between text-slate-400">
             <span>Passos desfeitos (Undos):</span>
-            <span className="font-mono text-slate-300 font-semibold">
+            <span className="font-mono tabular-nums text-slate-300 font-semibold">
               {stats.undosCount} {stats.restartsCount > 0 && `(Total: ${stats.sessionTotalUndos})`}
             </span>
           </div>
 
           <div className="flex items-center justify-between text-slate-400">
             <span>Reinicializações solicitadas pelo usuário:</span>
-            <span className={`font-mono font-bold ${stats.restartsCount === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+            <span className={`font-mono tabular-nums font-bold ${stats.restartsCount === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
               {stats.restartsCount} {stats.restartsCount === 0 ? '(Nenhuma - 1ª tentativa)' : 'vez(es)'}
             </span>
           </div>
 
           <div className="flex items-center justify-between text-slate-400">
-            <span>Travessias excedentes ao ideal de 17:</span>
-            <span className="font-mono text-amber-400 font-semibold">+{stats.unnecessaryMovesCount}</span>
+            <span>Travessias excedentes ao ideal de {stats.idealMoves}:</span>
+            <span className="font-mono tabular-nums text-amber-400 font-semibold">+{stats.unnecessaryMovesCount}</span>
           </div>
 
           <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
@@ -177,7 +179,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
               <span>Classificação Atual:</span>
             </div>
             <div className="text-right">
-              <span className="text-base font-extrabold text-white font-mono">{stats.logicScore}%</span>
+              <span className="text-base font-extrabold text-white font-mono tabular-nums">{stats.logicScore}%</span>
               <span className="text-[10px] text-emerald-400 block">{stats.rankTitle}</span>
             </div>
           </div>
@@ -185,7 +187,9 @@ export const StatsModal: React.FC<StatsModalProps> = ({
 
         {/* Pedagogical Explanation */}
         <div className="text-[11px] text-slate-400 bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/60 leading-relaxed mb-4">
-          <strong>Fórmula de Avaliação Pedagógica:</strong> A eficiência é calculada relacionando as 17 travessias ótimas com o total de tentativas efetuadas (17 / total de travessias × 100%). O índice global avalia a autonomia do aluno sem recorrer a dicas ou violar as restrições mútuas.
+          <strong>Fórmula de Avaliação Pedagógica:</strong> A eficiência é calculada relacionando as {stats.idealMoves}{' '}
+          travessias ótimas desta fase com o total de tentativas efetuadas ({stats.idealMoves} / total de travessias ×
+          100%). O índice global avalia a autonomia do aluno sem recorrer a dicas ou violar as restrições mútuas.
         </div>
 
         {/* Close Button */}

@@ -14,9 +14,11 @@ import {
   AlertOctagon,
   Zap,
   Award,
+  Rocket,
+  Waves,
+  Trees,
 } from 'lucide-react';
 import { LogicStats, GamePhase, ClassicSubtheme } from '../types/game';
-import { Rocket } from 'lucide-react';
 
 interface VictoryModalProps {
   isOpen: boolean;
@@ -38,7 +40,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   timerSeconds,
   studentName,
   stats,
-  phase = 'classic',
+  phase = 'wolf',
   subtheme = 'teams',
   onSelectNextPhase,
   onStudentNameChange,
@@ -55,7 +57,6 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      // Confetti burst
       const count = 200;
       const defaults = { origin: { y: 0.7 } };
 
@@ -81,8 +82,9 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   const seconds = timerSeconds % 60;
   const timeFormatted = `${minutes}m ${seconds}s`;
 
-  const isOptimal = movesCount === 17;
-  const isFasterThanJapanAvg = timerSeconds < 15 * 60;
+  const idealMoves = stats.idealMoves;
+  const isOptimal = movesCount === idealMoves;
+  const isFasterThanJapanAvg = phase === 'classic' && timerSeconds < 15 * 60;
   const displayName = studentName.trim() ? studentName.trim() : 'Aluno(a)';
 
   const handleCopyReport = () => {
@@ -96,22 +98,26 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
       ? '⭐ CONSEGUIU DE 1ª TENTATIVA (SEM REINICIAR)'
       : `🔄 CONSEGUIU COM REINICIALIZAÇÃO (${stats.restartsCount} reinício(s) - Sucesso na Tentativa #${stats.attemptNumber})`;
 
-    const phaseTitle = phase === 'space' 
-      ? 'FASE 2: EVACUAÇÃO DA ESTAÇÃO ESPACIAL MARTE-01' 
-      : subtheme === 'teams'
-      ? 'FASE 1: GINCANA DAS EQUIPES (TRAVESSIA DO RIO)'
-      : 'FASE 1: TESTE DE QI JAPONÊS (TRAVESSIA DO RIO)';
+    const phaseTitle =
+      phase === 'wolf'
+        ? 'FASE 1: LOBO, CORDEIRO E ALFACE'
+        : phase === 'space'
+        ? 'FASE 3: EVACUAÇÃO DA ESTAÇÃO ESPACIAL MARTE-01'
+        : subtheme === 'teams'
+        ? 'FASE 2: GINCANA DAS EQUIPES (TRAVESSIA DO RIO)'
+        : 'FASE 2: TRAVESSIA DO RIO · TESTE DE QI JAPONÊS';
     const moveLabel = phase === 'space' ? 'Voos da Cápsula' : 'Travessias';
 
     const text =
-      `🎓 COMPROVANTE DE AVALIAÇÃO · ${phaseTitle}\n` +
+      `🎓 DESAFIOS DE LÓGICA · COMPROVANTE DE AVALIAÇÃO\n` +
+      `📌 Etapa: ${phaseTitle}\n` +
       `👤 Aluno(a): ${displayName}\n` +
       `🏅 Status de Resolução: ${restartStatusText}\n` +
       `🔢 Tentativa Vencedora: #${stats.attemptNumber} (${stats.restartsCount} reinicializações solicitadas)\n` +
       `⏱️ Tempo da Tentativa: ${timeFormatted}\n` +
-      `${phase === 'space' ? '🚀' : '⛵'} ${moveLabel} da Tentativa: ${movesCount} (Mínimo Ideal: 17)\n` +
+      `${phase === 'space' ? '🚀' : '⛵'} ${moveLabel} da Tentativa: ${movesCount} (Mínimo Ideal: ${idealMoves})\n` +
       `🎯 Índice de Eficiência da Tentativa: ${stats.efficiencyIndex}%\n` +
-      `🌐 Índice de Eficiência Global da Sessão: ${stats.globalEfficiencyIndex}% (17 / ${stats.sessionTotalMoves} movimentos acumulados)\n` +
+      `🌐 Índice de Eficiência Global da Sessão: ${stats.globalEfficiencyIndex}% (${idealMoves} / ${stats.sessionTotalMoves} movimentos acumulados)\n` +
       `💡 Pedidos de Dica: ${stats.hintsUsedCount} nesta tentativa (Total na sessão: ${stats.sessionTotalHints})\n` +
       `⚠️ Movimentos Errados/Desnecessários: ${stats.totalWrongOrUnnecessary} nesta tentativa (Total na sessão: ${stats.sessionTotalWrongOrUnnecessary})\n` +
       `🧠 Classificação Final de Lógica: ${stats.rankTitle} (${stats.logicScore}%)\n` +
@@ -180,9 +186,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-xl sm:text-2xl font-black text-amber-300 tracking-tight">
-                  {displayName}
-                </span>
+                <span className="text-xl sm:text-2xl font-black text-amber-300 tracking-tight">{displayName}</span>
                 {onStudentNameChange && (
                   <button
                     onClick={() => {
@@ -200,7 +204,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           </div>
         </div>
 
-        {/* Restart Status Banner - Highlights whether solved with or without restarting */}
+        {/* Restart Status Banner */}
         <div
           className={`my-3 p-3 rounded-xl border flex items-center justify-between text-left ${
             stats.achievedWithoutRestart
@@ -225,27 +229,26 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
           </div>
           <div className="text-right shrink-0 pl-2">
             <span className="text-[10px] font-bold uppercase text-slate-300 block">Eficiência Global</span>
-            <span className="text-lg font-black font-mono text-amber-300">{stats.globalEfficiencyIndex}%</span>
+            <span className="text-lg font-black font-mono tabular-nums text-amber-300">
+              {stats.globalEfficiencyIndex}%
+            </span>
           </div>
         </div>
 
         {/* The Core Evaluative Metrics */}
         <div className="my-3 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider block mb-2 text-left flex items-center justify-between">
+          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 text-left flex items-center justify-between">
             <span>Avaliação de Métricas Pedagógicas:</span>
-            <span className="text-amber-400 font-mono text-[11px]">Ideal: 17 Travessias</span>
+            <span className="text-amber-400 font-mono text-[11px]">Ideal: {idealMoves} Travessias</span>
           </span>
 
           <div className="grid grid-cols-3 gap-2 text-center">
-            {/* 1. Quantidade de pedidos de dicas */}
             <div className="bg-slate-800/80 p-2 rounded-lg border border-slate-700 flex flex-col justify-between">
               <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-emerald-400">
                 <Lightbulb className="w-3 h-3" />
                 <span>Dicas</span>
               </div>
-              <div className="text-xl font-black font-mono text-white my-0.5">
-                {stats.hintsUsedCount}
-              </div>
+              <div className="text-xl font-black font-mono tabular-nums text-white my-0.5">{stats.hintsUsedCount}</div>
               <span className="text-[9px] text-slate-400">
                 {stats.restartsCount > 0
                   ? `Total sessão: ${stats.sessionTotalHints}`
@@ -255,31 +258,34 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
               </span>
             </div>
 
-            {/* 2. Quantidade de movimentos errados ou desnecessários */}
             <div className="bg-slate-800/80 p-2 rounded-lg border border-slate-700 flex flex-col justify-between">
               <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-rose-400">
                 <AlertOctagon className="w-3 h-3" />
                 <span>Erros / Extras</span>
               </div>
-              <div className="text-xl font-black font-mono text-rose-300 my-0.5">
+              <div className="text-xl font-black font-mono tabular-nums text-rose-300 my-0.5">
                 {stats.totalWrongOrUnnecessary}
               </div>
-              <span className="text-[9px] text-slate-400" title={`Tentativa: ${stats.wrongAttemptsCount} inf. + ${stats.undosCount} undos + ${stats.unnecessaryMovesCount} ext. | Total sessão: ${stats.sessionTotalWrongOrUnnecessary}`}>
-                {stats.restartsCount > 0 ? `Total sessão: ${stats.sessionTotalWrongOrUnnecessary}` : `${stats.wrongAttemptsCount} inf. + ${stats.unnecessaryMovesCount} ext.`}
+              <span
+                className="text-[9px] text-slate-400"
+                title={`Tentativa: ${stats.wrongAttemptsCount} inf. + ${stats.undosCount} undos + ${stats.unnecessaryMovesCount} ext. | Total sessão: ${stats.sessionTotalWrongOrUnnecessary}`}
+              >
+                {stats.restartsCount > 0
+                  ? `Total sessão: ${stats.sessionTotalWrongOrUnnecessary}`
+                  : `${stats.wrongAttemptsCount} inf. + ${stats.unnecessaryMovesCount} ext.`}
               </span>
             </div>
 
-            {/* 3. Índice de eficiência */}
             <div className="bg-slate-800/80 p-2 rounded-lg border border-slate-700 flex flex-col justify-between">
               <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-amber-400">
                 <Zap className="w-3 h-3" />
                 <span>Eficiência</span>
               </div>
-              <div className="text-xl font-black font-mono text-amber-300 my-0.5">
+              <div className="text-xl font-black font-mono tabular-nums text-amber-300 my-0.5">
                 {stats.efficiencyIndex}%
               </div>
               <span className="text-[9px] text-slate-400">
-                {stats.restartsCount > 0 ? `Global: ${stats.globalEfficiencyIndex}%` : `Base 17/${movesCount}`}
+                {stats.restartsCount > 0 ? `Global: ${stats.globalEfficiencyIndex}%` : `Base ${idealMoves}/${movesCount}`}
               </span>
             </div>
           </div>
@@ -289,60 +295,84 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
         <div className="grid grid-cols-2 gap-2 mb-3">
           <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/80">
             <span className="text-[11px] text-slate-400 block mb-0.5">Tempo da Tentativa</span>
-            <div className="flex items-center justify-center gap-1 text-base font-bold font-mono text-white">
+            <div className="flex items-center justify-center gap-1 text-base font-bold font-mono tabular-nums text-white">
               <Clock className="w-4 h-4 text-blue-400" />
               <span>{timeFormatted}</span>
             </div>
             <span className="text-[9px] text-emerald-400 mt-0.5 block">
-              {isFasterThanJapanAvg ? '⚡ Mais rápido que a média japonesa (15m)' : 'Tempo registrado'}
+              {isFasterThanJapanAvg
+                ? 'Mais rápido que a média histórica (15m)'
+                : isOptimal
+                ? 'Resolução em sequência ótima'
+                : 'Tempo registrado'}
             </span>
           </div>
 
           <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/80">
             <span className="text-[11px] text-slate-400 block mb-0.5">Travessias da Tentativa</span>
-            <div className="text-base font-bold font-mono text-amber-400">
-              {movesCount} {stats.restartsCount > 0 && <span className="text-xs text-slate-400 font-normal">({stats.sessionTotalMoves} tot)</span>}
+            <div className="text-base font-bold font-mono tabular-nums text-amber-400">
+              {movesCount}{' '}
+              {stats.restartsCount > 0 && (
+                <span className="text-xs text-slate-400 font-normal">({stats.sessionTotalMoves} tot)</span>
+              )}
             </div>
             <span className="text-[9px] text-slate-400 mt-0.5 block">
-              {isOptimal ? '⭐ Recorde Teórico Mínimo (17)!' : 'Mínimo ideal: 17 travessias'}
+              {isOptimal ? `Recorde Teórico Mínimo (${idealMoves})!` : `Mínimo ideal: ${idealMoves} travessias`}
             </span>
           </div>
         </div>
 
         {/* Logical Evaluation Box with Rank */}
         <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-left text-xs text-slate-300 space-y-1 mb-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-emerald-400 font-bold">
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>Parecer de Raciocínio Lógico:</span>
             </div>
-            <div className="flex items-center gap-1 font-mono font-bold text-amber-300 text-xs">
-              <Award className="w-3.5 h-3.5 text-amber-400" />
+            <div className="flex items-center gap-1 font-mono font-bold text-amber-300 text-xs text-right">
+              <Award className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span>{stats.rankTitle}</span>
             </div>
           </div>
           <p className="leading-relaxed text-slate-300 text-[11px]">
-            Parabéns, <strong>{displayName}</strong>! Concluiu com eficiência de <strong>{stats.efficiencyIndex}%</strong> na tentativa #{stats.attemptNumber} {stats.restartsCount > 0 ? `(Eficiência global da sessão: ${stats.globalEfficiencyIndex}% com ${stats.restartsCount} reinicializações)` : `(concluído sem reiniciar na primeira tentativa!)`}.
+            Parabéns, <strong>{displayName}</strong>! Concluiu com eficiência de <strong>{stats.efficiencyIndex}%</strong>{' '}
+            na tentativa #{stats.attemptNumber}{' '}
+            {stats.restartsCount > 0
+              ? `(Eficiência global da sessão: ${stats.globalEfficiencyIndex}% com ${stats.restartsCount} reinicializações)`
+              : `(concluído sem reiniciar na primeira tentativa!)`}
+            .
           </p>
         </div>
 
-        {/* Action Buttons: Next Phase & Copy Report & Play Again & New Student */}
+        {/* Action Buttons */}
         <div className="flex flex-col gap-2">
           {onSelectNextPhase && (
             <button
               onClick={onSelectNextPhase}
               className={`w-full py-3 rounded-xl font-bold text-sm shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-102 active:scale-98 ${
-                phase === 'classic'
+                phase === 'wolf'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-blue-500/30 ring-2 ring-blue-400/50'
+                  : phase === 'classic'
                   ? 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-cyan-500/30 ring-2 ring-cyan-400/50'
                   : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white shadow-emerald-500/30 ring-2 ring-emerald-400/50'
               }`}
             >
-              <Rocket className="w-5 h-5 animate-pulse text-amber-300" />
-              <span>
-                {phase === 'classic'
-                  ? '🚀 Avançar para Fase 2: Estação Espacial Marte-01'
-                  : '🌊 Voltar para Fase 1: Rio Clássico'}
-              </span>
+              {phase === 'wolf' ? (
+                <>
+                  <Waves className="w-5 h-5 text-amber-300" />
+                  <span>Avançar para Fase 2: Travessia do Rio</span>
+                </>
+              ) : phase === 'classic' ? (
+                <>
+                  <Rocket className="w-5 h-5 text-amber-300" />
+                  <span>Avançar para Fase 3: Estação Espacial Marte-01</span>
+                </>
+              ) : (
+                <>
+                  <Trees className="w-5 h-5 text-amber-300" />
+                  <span>Voltar para Fase 1: Lobo, Cordeiro e Alface</span>
+                </>
+              )}
             </button>
           )}
 
@@ -388,4 +418,3 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
     </div>
   );
 };
-
